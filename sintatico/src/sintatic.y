@@ -19,6 +19,12 @@ typedef enum Rules {
 	,parameter
 	,type_identifier
 	,statments
+	,statment
+	,retrn
+	,value
+	,array_access
+	,variables_declaration
+	,identifiers_list
 	,expression
 	,expression_1
 	,expression_2
@@ -42,26 +48,35 @@ typedef enum Rules {
 
 %code {
     char rulesNames[100][100] = {
-    	"ini"
-		,"program"
-		,"function_declaration"
-		,"paramenters"
-		,"parameters_list"
-		,"parameter"
-		,"type_identifier"
-		,"statments"
-		,"expression"
-		,"expression_1"
-		,"expression_2"
-		,"expression_3"
-		,"assignment"
-		,"number"
+  			"ini"
+			,"program"
+			,"function_declaration"
+			,"paramenters"
+			,"parameters_list"
+			,"parameter"
+			,"type_identifier"
+			,"statments"
+			,"statment"
+			,"retrn"
+			,"value"
+			,"array_access"
+			,"variables_declaration"
+			,"identifiers_list"
+			,"expression"
+			,"expression_1"
+			,"expression_2"
+			,"expression_3"
+			,"assignment"
+			,"number"
     };
 }
 
 %token <op> Integer "integer"
 %token <op> Float "float"
-%token <op> Keyword "keyword"
+%token <op> Return "return"
+%token <op> If "if"
+%token <op> Else "else"
+%token <op> While "while"
 %token <op> Write "write"
 %token <op> Read "read"
 %token <op> Type "type"
@@ -81,13 +96,18 @@ typedef enum Rules {
 %type <node> parameter
 %type <node> type_identifier
 %type <node> statments
+%type <node> statment
+%type <node> retrn
+%type <node> value
+%type <node> array_access
+%type <node> variables_declaration
+%type <node> identifiers_list
 %type <node> expression
 %type <node> expression_1
 %type <node> expression_2
 %type <node> expression_3
 %type <node> assignment
 %type <node> number
-
 
 %start ini
 
@@ -109,12 +129,13 @@ program:
 	}
 
 function_declaration:
-	type_identifier '(' paramenters ')' statments {
+	type_identifier Id '(' paramenters ')' statments {
 		$$ = new_node();
 		add_child($$, $1);
-		add_child($$, $3);
-		add_child($$, $5);
+		add_child($$, $4);
+		add_child($$, $6);
 		$$->type = rulesNames[function_declaration];
+		strcpy($$->op, $2);
 	}
 
 paramenters:
@@ -169,10 +190,119 @@ type_identifier:
 	}
 
 statments:
-	{
+	statment statments {
+		$$ = new_node();
+		add_child($$, $1);
+		add_child($$, $2);
+		$$->type = rulesNames[statments];
+	}
+	| '{' statments '}' {
+		$$ = new_node();
+		add_child($$, $2);
+		$$->type = rulesNames[statments];
+		strcat($$->op, "{}");
+	}
+	|{
 		$$ = new_node();
 		$$->type = rulesNames[statments];
 	}
+
+statment:
+	variables_declaration {
+		$$ = new_node();
+		add_child($$, $1);
+		$$->type = rulesNames[statment];
+	}
+	| retrn
+
+retrn:
+	Return value ';' {
+		$$ = new_node();
+		add_child($$, $2);
+		$$->type = rulesNames[retrn];
+	}
+
+value:
+	Id {
+		$$ = new_node();
+		$$->type = rulesNames[value];
+		strcpy($$->op, $1);
+	}
+	| number {
+		$$ = new_node();
+		$$->type = rulesNames[value];
+		add_child($$, $1);
+		strcpy($$->op, $1->op);
+	}
+	| array_access {
+		$$ = new_node();
+		$$->type = rulesNames[value];
+		add_child($$, $1);
+		strcpy($$->op, $1->op);
+	}
+
+array_access:
+	Id '[' value ']'  {
+		$$ = new_node();
+		$$->type = rulesNames[array_access];
+		add_child($$, $3);
+		strcpy($$->op, $1);
+		strcat($$->op, "[");
+		strcat($$->op, $3->op);
+		strcat($$->op, "]");
+	}
+	| Id '[' value ',' value ']'  {
+		$$ = new_node();
+		$$->type = rulesNames[array_access];
+		add_child($$, $3);
+		add_child($$, $5);
+		strcpy($$->op, $1);
+		strcat($$->op, "[");
+		strcat($$->op, $3->op);
+		strcat($$->op, ",");
+		strcat($$->op, $5->op);
+		strcat($$->op, "]");
+	}
+
+variables_declaration:
+	type_identifier identifiers_list ';' {
+		$$ = new_node();
+		add_child($$, $1);
+		add_child($$, $2);
+		$$->type = rulesNames[variables_declaration];
+	}
+
+identifiers_list:
+	Id ',' identifiers_list {
+		$$ = new_node();
+		add_child($$, $3);
+		$$->type = rulesNames[identifiers_list];
+		strcpy($$->op, $1);
+		strcat($$->op, ",");
+	}
+	| Id '[' Integer ']' ',' identifiers_list {
+		$$ = new_node();
+		add_child($$, $6);
+		$$->type = rulesNames[identifiers_list];
+		strcpy($$->op, $1);
+		strcat($$->op, "[");
+		strcat($$->op, $3);
+		strcat($$->op, "],");
+	}
+	| Id '[' Integer ']' {
+		$$ = new_node();
+		$$->type = rulesNames[identifiers_list];
+		strcpy($$->op, $1);
+		strcat($$->op, "[");
+		strcat($$->op, $3);
+		strcat($$->op, "]");
+	}
+	| Id {
+		$$ = new_node();
+		$$->type = rulesNames[identifiers_list];
+		strcpy($$->op, $1);
+	}
+
 
 expression: 
 	Id assignment expression {

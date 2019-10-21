@@ -1,1 +1,4 @@
-int(int a, float asd, int vc)
+int func (int a, float asd, int vc) {
+	int a, b, c, d[10];
+	return d[1,3];
+}

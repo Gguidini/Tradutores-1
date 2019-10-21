@@ -46,10 +46,28 @@ int lines = 0, errors = 0;
 	return Float;
 }
 
-{KEYWORD} {
+"return" {
     yylval->op = (char*) malloc(sizeof(char) * strlen(yytext));
     strcpy(yylval->op, yytext);
-    return Keyword;
+    return Return;
+}
+
+"if" {
+    yylval->op = (char*) malloc(sizeof(char) * strlen(yytext));
+    strcpy(yylval->op, yytext);
+    return If;
+}
+
+"else" {
+    yylval->op = (char*) malloc(sizeof(char) * strlen(yytext));
+    strcpy(yylval->op, yytext);
+    return Else;
+}
+
+"while" {
+    yylval->op = (char*) malloc(sizeof(char) * strlen(yytext));
+    strcpy(yylval->op, yytext);
+    return While;
 }
 
 {OUT} {
