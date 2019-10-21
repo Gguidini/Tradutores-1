@@ -14,7 +14,7 @@ ID       [a-zA-Z_][a-z0-9A-Z]*
 
 KEYWORD  if|else|while|return
 
-OP1 >|<|==|>=|<=
+OP1 >|<|"=="|">="|"<="
 
 OP2 "+"|"-"|'^'|'|'|&|&&|"||"
 
@@ -73,13 +73,13 @@ int lines = 0, errors = 0;
 {OUT} {
     yylval->op = (char*) malloc(sizeof(char) * strlen(yytext));
     strcpy(yylval->op, yytext);
-    return Write;
+    return Writi;
 }
 
 {IN} {
     yylval->op = (char*) malloc(sizeof(char) * strlen(yytext));
     strcpy(yylval->op, yytext);
-    return Read;
+    return Readi;
 }
 
 {BASIC_TYPE} {

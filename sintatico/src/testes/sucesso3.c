@@ -6,6 +6,6 @@ int func (int a, float asd, int vc) {
 			d[2,3] += ewew;
 		}
 	}
-	outInt(d);
-	inInt(dxd);
+	outInt d;
+	inInt dxd;
 }

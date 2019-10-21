@@ -19,4 +19,4 @@ sintatic.tab.c:
 	bison sintatic.y
 
 clean:
-	rm sintatic.tab.* lex.yy.c *.o
+	rm sintatic.tab.c sintatic.tab.h lex.yy.c *.o sintatic

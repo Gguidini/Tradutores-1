@@ -11,29 +11,34 @@
 #include "tree.h"
 
 typedef enum Rules {
-	ini = 0
-	,program
-	,function_declaration
-	,paramenters
-	,parameters_list
-	,parameter
-	,type_identifier
-	,statments
-	,statment
-	,conditional
-	,else_if
-	,loop
-	,retrn
-	,value
-	,array_access
-	,variables_declaration
-	,identifiers_list
-	,expression
-	,expression_1
-	,expression_2
-	,expression_3
-	,assignment
-	,number
+		ini = 0
+		,program
+		,function_declaration
+		,paramenters
+		,parameters_list
+		,parameter
+		,type_identifier
+		,statments
+		,statment
+		,readi
+		,writi
+		,function_call
+		,arguments
+		,arguments_list
+		,conditional
+		,else_if
+		,loop
+		,retrn
+		,value
+		,array_access
+		,variables_declaration
+		,identifiers_list
+		,expression
+		,expression_1
+		,expression_2
+		,expression_3
+		,assignment
+		,number
 } Rules;
 }
 
@@ -51,29 +56,34 @@ typedef enum Rules {
 
 %code {
     char rulesNames[100][100] = {
-  			"ini"
-			,"program"
-			,"function_declaration"
-			,"paramenters"
-			,"parameters_list"
-			,"parameter"
-			,"type_identifier"
-			,"statments"
-			,"statment"
-			,"conditional"
-			,"else_if"
-			,"loop"
-			,"retrn"
-			,"value"
-			,"array_access"
-			,"variables_declaration"
-			,"identifiers_list"
-			,"expression"
-			,"expression_1"
-			,"expression_2"
-			,"expression_3"
-			,"assignment"
-			,"number"
+				"ini"
+				,"program"
+				,"function_declaration"
+				,"paramenters"
+				,"parameters_list"
+				,"parameter"
+				,"type_identifier"
+				,"statments"
+				,"statment"
+				,"readi"
+				,"writi"
+				,"function_call"
+				,"arguments"
+				,"arguments_list"
+				,"conditional"
+				,"else_if"
+				,"loop"
+				,"retrn"
+				,"value"
+				,"array_access"
+				,"variables_declaration"
+				,"identifiers_list"
+				,"expression"
+				,"expression_1"
+				,"expression_2"
+				,"expression_3"
+				,"assignment"
+				,"number"
     };
 }
 
@@ -83,8 +93,8 @@ typedef enum Rules {
 %token <op> If "if"
 %token <op> Else "else"
 %token <op> While "while"
-%token <op> Write "write"
-%token <op> Read "read"
+%token <op> Writi "writi"
+%token <op> Readi "readi"
 %token <op> Type "type"
 %token <op> ArrayType "arrayType"
 %token <op> ArrayOp "arrayOp"
@@ -103,6 +113,11 @@ typedef enum Rules {
 %type <node> type_identifier
 %type <node> statments
 %type <node> statment
+%type <node> readi
+%type <node> writi
+%type <node> function_call
+%type <node> arguments
+%type <node> arguments_list
 %type <node> conditional
 %type <node> else_if
 %type <node> loop
@@ -134,6 +149,18 @@ program:
 	function_declaration {
 		$$ = new_node();
 		add_child($$, $1);
+		$$->type = rulesNames[program];
+	}
+	| function_declaration program {
+		$$ = new_node();
+		add_child($$, $1);
+		add_child($$, $2);
+		$$->type = rulesNames[program];
+	}
+	| variables_declaration program {
+		$$ = new_node();
+		add_child($$, $1);
+		add_child($$, $2);
 		$$->type = rulesNames[program];
 	}
 
@@ -217,11 +244,95 @@ statments:
 	}
 
 statment:
-	variables_declaration 
-	| retrn 
-	| conditional
-	| loop
-	| expression ';'
+	variables_declaration {
+		$$ = new_node();
+		add_child($$, $1);
+		$$->type = rulesNames[statment];
+	} 
+	| retrn {
+		$$ = new_node();
+		add_child($$, $1);
+		$$->type = rulesNames[statment];
+	} 
+	| conditional {
+		$$ = new_node();
+		add_child($$, $1);
+		$$->type = rulesNames[statment];
+	}
+	| loop {
+		$$ = new_node();
+		add_child($$, $1);
+		$$->type = rulesNames[statment];
+	}
+	| expression ';' {
+		$$ = new_node();
+		add_child($$, $1);
+		$$->type = rulesNames[statment];
+	}
+	| function_call ';' {
+		$$ = new_node();
+		add_child($$, $1);
+		$$->type = rulesNames[statment];
+	}
+	| readi {
+		$$ = new_node();
+		add_child($$, $1);
+		$$->type = rulesNames[statment];
+	}
+	| writi {
+		$$ = new_node();
+		add_child($$, $1);
+		$$->type = rulesNames[statment];
+	}
+
+readi:
+	Readi Id ';' {
+		$$ = new_node();
+		$$->type = rulesNames[readi];
+		strcpy($$->op, $1);
+		strcat($$->op, $2);
+	}
+
+
+writi:
+	Writi Id ';' {
+		$$ = new_node();
+		$$->type = rulesNames[writi];
+		strcpy($$->op, $1);
+		strcat($$->op, $2);
+	}
+
+function_call:
+	Id '(' arguments ')'  {
+		$$ = new_node();
+		add_child($$, $3);
+		$$->type = rulesNames[function_call];
+		strcpy($$->op, $1);
+	}
+
+arguments:
+	arguments_list  {
+		$$ = new_node();
+		add_child($$, $1);
+		$$->type = rulesNames[arguments];
+	}
+	| {
+		$$ = new_node();
+		$$->type = rulesNames[arguments];
+	}
+
+arguments_list:
+	value ',' arguments_list  {
+		$$ = new_node();
+		add_child($$, $1);
+		add_child($$, $3);
+		$$->type = rulesNames[arguments_list];
+	}
+	| value {
+		$$ = new_node();
+		add_child($$, $1);
+		$$->type = rulesNames[arguments_list];
+	}
 
 conditional:
 	If '(' expression ')' '{' statments '}' else_if {
@@ -286,9 +397,15 @@ value:
 		add_child($$, $1);
 		strcpy($$->op, $1->op);
 	}
+	| function_call {
+		$$ = new_node();
+		$$->type = rulesNames[value];
+		add_child($$, $1);
+		strcpy($$->op, $1->op);
+	}
 
 array_access:
-	Id '[' value ']'  {
+	Id '[' expression ']'  {
 		$$ = new_node();
 		$$->type = rulesNames[array_access];
 		add_child($$, $3);
@@ -297,7 +414,7 @@ array_access:
 		strcat($$->op, $3->op);
 		strcat($$->op, "]");
 	}
-	| Id '[' value ',' value ']'  {
+	| Id '[' expression ',' expression ']'  {
 		$$ = new_node();
 		$$->type = rulesNames[array_access];
 		add_child($$, $3);
@@ -407,9 +524,33 @@ expression_3:
 		add_child($$, $3);
 		$$->type = rulesNames[expression_3];
 	}
+	| value Op3 expression_3 {
+		$$ = new_node();
+		strcpy($$->op, $2);
+		add_child($$, $1);
+		add_child($$, $3);
+		$$->type = rulesNames[expression_3];
+	}
+	| UOp value {
+		$$ = new_node();
+		add_child($$, $2);	
+		$$->type = rulesNames[expression_3];
+		strcpy($$->op, $1);	
+	}
+	| UOp '(' expression ')' {
+		$$ = new_node();
+		add_child($$, $3);	
+		$$->type = rulesNames[expression_3];
+		strcpy($$->op, $1);	
+	}
 	| value {
 		$$ = new_node();
 		add_child($$, $1);	
+		$$->type = rulesNames[expression_3];
+	}
+	| '(' expression ')' {
+		$$ = new_node();
+		add_child($$, $2);	
 		$$->type = rulesNames[expression_3];
 	}
 
