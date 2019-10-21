@@ -113,7 +113,7 @@ int lines = 0, errors = 0;
 
 {ID} {
     if(yyleng >= 33) {
-        printf("The idenfier length is too long, the idenfier was truncated to the first 33 characters\n");
+        printf("Warning! Line %d. The idenfier %s is too long, it was truncated to the first 33 characters\n", lines, yytext);
         yytext[33] = 0;
     }
     yylval->tok.op = (char*) malloc(sizeof(char) * strlen(yytext));
@@ -221,12 +221,12 @@ int lines = 0, errors = 0;
 
 . {
     errors++;
-    printf("ERROR line %d! Unrecognized character: %s\n", lines, yytext);
+    printf("ERROR! line %d! Unrecognized character: %s\n", lines, yytext);
 }
 
 {DIGIT}+[^+*<>=~&|/^\n\t ;,)\]-]+ {
     errors++;
-    printf("ERROR line %d! Unrecognized token: %s\n", lines, yytext);
+    printf("ERROR! line %d! Unrecognized token: %s\n", lines, yytext);
 }
 
 %%
