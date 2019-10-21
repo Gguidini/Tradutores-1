@@ -1,0 +1,4 @@
+Executar analisador sintático
+Na pasta src execute os comandos:
+make
+./sintatic < {arquivo com código para analise}
