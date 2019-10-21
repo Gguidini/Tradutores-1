@@ -6,7 +6,7 @@ int main(){
 	int n;
 	int variavelbemgrandecommaisde33caracteresblablablablablablablablablablablablablablabla;
 	inInt n;
-	x+2;
+	n=2+x-1;
 	SumArray<int> v[10];
 	int i;
 	i=0;

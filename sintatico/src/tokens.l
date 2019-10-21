@@ -35,68 +35,79 @@ int lines = 0, errors = 0;
 %%
 
 {DIGIT}+ {
-    yylval->op = (char*) malloc(sizeof(char) * strlen(yytext));
-    strcpy(yylval->op, yytext);
-	return Integer;
+    yylval->tok.op = (char*) malloc(sizeof(char) * strlen(yytext));
+    strcpy(yylval->tok.op, yytext);
+	yylval->tok.line = lines;
+    return Integer;
 }
 
 {DIGIT}+"."{DIGIT}+ {
-    yylval->op = (char*) malloc(sizeof(char) * strlen(yytext));
-    strcpy(yylval->op, yytext);
-	return Float;
+    yylval->tok.op = (char*) malloc(sizeof(char) * strlen(yytext));
+    strcpy(yylval->tok.op, yytext);
+	yylval->tok.line = lines;
+    return Float;
 }
 
 "return" {
-    yylval->op = (char*) malloc(sizeof(char) * strlen(yytext));
-    strcpy(yylval->op, yytext);
+    yylval->tok.op = (char*) malloc(sizeof(char) * strlen(yytext));
+    strcpy(yylval->tok.op, yytext);
+    yylval->tok.line = lines;
     return Return;
 }
 
 "if" {
-    yylval->op = (char*) malloc(sizeof(char) * strlen(yytext));
-    strcpy(yylval->op, yytext);
+    yylval->tok.op = (char*) malloc(sizeof(char) * strlen(yytext));
+    strcpy(yylval->tok.op, yytext);
+    yylval->tok.line = lines;
     return If;
 }
 
 "else" {
-    yylval->op = (char*) malloc(sizeof(char) * strlen(yytext));
-    strcpy(yylval->op, yytext);
+    yylval->tok.op = (char*) malloc(sizeof(char) * strlen(yytext));
+    strcpy(yylval->tok.op, yytext);
+    yylval->tok.line = lines;
     return Else;
 }
 
 "while" {
-    yylval->op = (char*) malloc(sizeof(char) * strlen(yytext));
-    strcpy(yylval->op, yytext);
+    yylval->tok.op = (char*) malloc(sizeof(char) * strlen(yytext));
+    strcpy(yylval->tok.op, yytext);
+    yylval->tok.line = lines;
     return While;
 }
 
 {OUT} {
-    yylval->op = (char*) malloc(sizeof(char) * strlen(yytext));
-    strcpy(yylval->op, yytext);
+    yylval->tok.op = (char*) malloc(sizeof(char) * strlen(yytext));
+    strcpy(yylval->tok.op, yytext);
+    yylval->tok.line = lines;
     return Writi;
 }
 
 {IN} {
-    yylval->op = (char*) malloc(sizeof(char) * strlen(yytext));
-    strcpy(yylval->op, yytext);
+    yylval->tok.op = (char*) malloc(sizeof(char) * strlen(yytext));
+    strcpy(yylval->tok.op, yytext);
+    yylval->tok.line = lines;
     return Readi;
 }
 
 {BASIC_TYPE} {
-    yylval->op = (char*) malloc(sizeof(char) * strlen(yytext));
-    strcpy(yylval->op, yytext);
+    yylval->tok.op = (char*) malloc(sizeof(char) * strlen(yytext));
+    strcpy(yylval->tok.op, yytext);
+    yylval->tok.line = lines;
     return Type;
 }
 
 "<"{BASIC_TYPE}">" {
-    yylval->op = (char*) malloc(sizeof(char) * strlen(yytext));
-    strcpy(yylval->op, yytext);
+    yylval->tok.op = (char*) malloc(sizeof(char) * strlen(yytext));
+    strcpy(yylval->tok.op, yytext);
+    yylval->tok.line = lines;
     return ArrayType;
 }
 
 {ARRAY_OPERATION} {
-    yylval->op = (char*) malloc(sizeof(char) * strlen(yytext));
-    strcpy(yylval->op, yytext);
+    yylval->tok.op = (char*) malloc(sizeof(char) * strlen(yytext));
+    strcpy(yylval->tok.op, yytext);
+    yylval->tok.line = lines;
     return ArrayOp;
 }
 
@@ -105,86 +116,100 @@ int lines = 0, errors = 0;
         printf("The idenfier length is too long, the idenfier was truncated to the first 33 characters\n");
         yytext[33] = 0;
     }
-    yylval->op = (char*) malloc(sizeof(char) * strlen(yytext));
-    strcpy(yylval->op, yytext);
+    yylval->tok.op = (char*) malloc(sizeof(char) * strlen(yytext));
+    strcpy(yylval->tok.op, yytext);
+    yylval->tok.line = lines;
     return Id;
 }
 
 {OP1} {
-    yylval->op = (char*) malloc(sizeof(char) * strlen(yytext));
-    strcpy(yylval->op, yytext);
+    yylval->tok.op = (char*) malloc(sizeof(char) * strlen(yytext));
+    strcpy(yylval->tok.op, yytext);
+    yylval->tok.line = lines;
     return Op1;
 }
 
 {OP2} {
-    yylval->op = (char*) malloc(sizeof(char) * strlen(yytext));
-    strcpy(yylval->op, yytext);
+    yylval->tok.op = (char*) malloc(sizeof(char) * strlen(yytext));
+    strcpy(yylval->tok.op, yytext);
+    yylval->tok.line = lines;
     return Op2;
 }
 
 {OP3} {
-    yylval->op = (char*) malloc(sizeof(char) * strlen(yytext));
-    strcpy(yylval->op, yytext);
+    yylval->tok.op = (char*) malloc(sizeof(char) * strlen(yytext));
+    strcpy(yylval->tok.op, yytext);
+    yylval->tok.line = lines;
     return Op3;
 }
 
 {UOP} {
-    yylval->op = (char*) malloc(sizeof(char) * strlen(yytext));
-    strcpy(yylval->op, yytext);
+    yylval->tok.op = (char*) malloc(sizeof(char) * strlen(yytext));
+    strcpy(yylval->tok.op, yytext);
+    yylval->tok.line = lines;
     return UOp;
 }
 
 "=" {
-    yylval->op = (char*) malloc(sizeof(char) * strlen(yytext));
-    strcpy(yylval->op, yytext);
-	return '=';
+    yylval->tok.op = (char*) malloc(sizeof(char) * strlen(yytext));
+    strcpy(yylval->tok.op, yytext);
+	yylval->tok.line = lines;
+    return '=';
 }
 
 "[" {
-    yylval->op = (char*) malloc(sizeof(char) * strlen(yytext));
-    strcpy(yylval->op, yytext);
+    yylval->tok.op = (char*) malloc(sizeof(char) * strlen(yytext));
+    strcpy(yylval->tok.op, yytext);
+    yylval->tok.line = lines;
     return '[';
 }
 
 "]" {
-    yylval->op = (char*) malloc(sizeof(char) * strlen(yytext));
-    strcpy(yylval->op, yytext);
+    yylval->tok.op = (char*) malloc(sizeof(char) * strlen(yytext));
+    strcpy(yylval->tok.op, yytext);
+    yylval->tok.line = lines;
     return ']';
 }
 
 ";" {
-    yylval->op = (char*) malloc(sizeof(char) * strlen(yytext));
-    strcpy(yylval->op, yytext);
+    yylval->tok.op = (char*) malloc(sizeof(char) * strlen(yytext));
+    strcpy(yylval->tok.op, yytext);
+    yylval->tok.line = lines;
     return ';';
 }
 
 "{" {
-    yylval->op = (char*) malloc(sizeof(char) * strlen(yytext));
-    strcpy(yylval->op, yytext);
+    yylval->tok.op = (char*) malloc(sizeof(char) * strlen(yytext));
+    strcpy(yylval->tok.op, yytext);
+    yylval->tok.line = lines;
     return '{';
 }
 
 "}" {
-    yylval->op = (char*) malloc(sizeof(char) * strlen(yytext));
-    strcpy(yylval->op, yytext);
+    yylval->tok.op = (char*) malloc(sizeof(char) * strlen(yytext));
+    strcpy(yylval->tok.op, yytext);
+    yylval->tok.line = lines;
     return '}';
 }
 
 "(" {
-    yylval->op = (char*) malloc(sizeof(char) * strlen(yytext));
-    strcpy(yylval->op, yytext);
+    yylval->tok.op = (char*) malloc(sizeof(char) * strlen(yytext));
+    strcpy(yylval->tok.op, yytext);
+    yylval->tok.line = lines;
     return '(';
 }
 
 ")" {
-    yylval->op = (char*) malloc(sizeof(char) * strlen(yytext));
-    strcpy(yylval->op, yytext);
+    yylval->tok.op = (char*) malloc(sizeof(char) * strlen(yytext));
+    strcpy(yylval->tok.op, yytext);
+    yylval->tok.line = lines;
     return ')';
 }
 
 "," {
-    yylval->op = (char*) malloc(sizeof(char) * strlen(yytext));
-    strcpy(yylval->op, yytext);
+    yylval->tok.op = (char*) malloc(sizeof(char) * strlen(yytext));
+    strcpy(yylval->tok.op, yytext);
+    yylval->tok.line = lines;
     return ',';
 }
 

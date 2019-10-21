@@ -16,6 +16,7 @@ struct Node {
 	char op[100];
 	int valueI;
 	float valueF;
+	int line;
 };
 
 Node* new_node();

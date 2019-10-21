@@ -7,6 +7,7 @@ Node* new_node() {
 	no->firstChild = 0;
 	no->lastChild = 0;
 	no->op[0] = 0;
+	no->line = 0;
 	return no;
 }
 
@@ -31,6 +32,7 @@ void show_tree(Node *root, int tabs) {
 	if(tabs == 1){
 		printf("Tree\n\n");
 	}
+	printf("line:%-4d",root->line );
 	for (i = 0; i < tabs; ++i) printf("  ");
 	printf("%s %s%s", root->type, root->op, root->firstChild ? "{\n" : "\n");
 	NodeList *child = root->firstChild;
@@ -38,15 +40,22 @@ void show_tree(Node *root, int tabs) {
 		show_tree(child->val, tabs + 1);
 		child = child->next;
 	}
+	printf("line:%-4d",root->line );
 	if(root->firstChild){
 		for (i = 0; i < tabs; ++i) printf("  ");
-		printf("}\n");
+		printf("}");
 	}
+	printf("\n");
 }
 
 void destroy_tree(Node *root) {
-	//if (root->left) destroy_tree(root->left);
-	//if (root->right) destroy_tree(root->right);
+	NodeList *child = root->firstChild;
+	while(child){
+		destroy_tree(child->val);
+		NodeList *aux = child;
+		child = child->next;
+		free(aux);
+	}
 	free(root);
 }
 
