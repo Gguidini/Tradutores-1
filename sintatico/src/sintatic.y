@@ -20,6 +20,9 @@ typedef enum Rules {
 	,type_identifier
 	,statments
 	,statment
+	,conditional
+	,else_if
+	,loop
 	,retrn
 	,value
 	,array_access
@@ -57,6 +60,9 @@ typedef enum Rules {
 			,"type_identifier"
 			,"statments"
 			,"statment"
+			,"conditional"
+			,"else_if"
+			,"loop"
 			,"retrn"
 			,"value"
 			,"array_access"
@@ -87,7 +93,7 @@ typedef enum Rules {
 %token <op> Op2 "op2"
 %token <op> Op3 "op3"
 %token <op> UOp "uop"
-
+ 
 %type <node> ini
 %type <node> program
 %type <node> function_declaration
@@ -97,6 +103,9 @@ typedef enum Rules {
 %type <node> type_identifier
 %type <node> statments
 %type <node> statment
+%type <node> conditional
+%type <node> else_if
+%type <node> loop
 %type <node> retrn
 %type <node> value
 %type <node> array_access
@@ -129,11 +138,11 @@ program:
 	}
 
 function_declaration:
-	type_identifier Id '(' paramenters ')' statments {
+	type_identifier Id '(' paramenters ')' '{' statments '}' {
 		$$ = new_node();
 		add_child($$, $1);
 		add_child($$, $4);
-		add_child($$, $6);
+		add_child($$, $7);
 		$$->type = rulesNames[function_declaration];
 		strcpy($$->op, $2);
 	}
@@ -208,12 +217,49 @@ statments:
 	}
 
 statment:
-	variables_declaration {
+	variables_declaration 
+	| retrn 
+	| conditional
+	| loop
+	| expression ';'
+
+conditional:
+	If '(' expression ')' '{' statments '}' else_if {
 		$$ = new_node();
-		add_child($$, $1);
-		$$->type = rulesNames[statment];
+		add_child($$, $3);
+		add_child($$, $6);
+		add_child($$, $8);
+		$$->type = rulesNames[conditional];
+		strcpy($$->op, $1);
 	}
-	| retrn
+
+else_if:
+	Else conditional {
+		$$ = new_node();
+		add_child($$, $2);
+		$$->type = rulesNames[else_if];
+		strcpy($$->op, $1);
+		strcat($$->op, " if");
+	}
+	| Else '{' statments '}' {
+		$$ = new_node();
+		add_child($$, $3);
+		$$->type = rulesNames[else_if];
+		strcpy($$->op, $1);
+	} 
+	|{
+		$$ = new_node();
+		$$->type = rulesNames[statments];
+	}
+
+loop:
+	While '(' expression ')' '{' statments '}' {
+		$$ = new_node();
+		add_child($$, $3);
+		add_child($$, $6);
+		$$->type = rulesNames[loop];
+		strcpy($$->op, $1);
+	}
 
 retrn:
 	Return value ';' {
@@ -312,6 +358,13 @@ expression:
 		$$->type = rulesNames[expression];
 		strcpy($$->op, $1);
 	}
+	| array_access assignment expression {
+		$$ = new_node();
+		add_child($$, $1);
+		add_child($$, $2);
+		add_child($$, $3);
+		$$->type = rulesNames[expression];
+	}
 	| expression_1 {
 		$$ = new_node();
 		add_child($$, $1);
@@ -347,14 +400,14 @@ expression_2:
 	}
 
 expression_3:
-	number Op3 expression_3 {
+	value Op3 expression_3 {
 		$$ = new_node();
 		strcpy($$->op, $2);
 		add_child($$, $1);
 		add_child($$, $3);
 		$$->type = rulesNames[expression_3];
 	}
-	| number {
+	| value {
 		$$ = new_node();
 		add_child($$, $1);	
 		$$->type = rulesNames[expression_3];

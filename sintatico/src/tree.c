@@ -38,8 +38,10 @@ void show_tree(Node *root, int tabs) {
 		show_tree(child->val, tabs + 1);
 		child = child->next;
 	}
-	for (i = 0; i < tabs; ++i) printf("  ");
-	printf("%s", root->firstChild ? "}\n" : "\n");
+	if(root->firstChild){
+		for (i = 0; i < tabs; ++i) printf("  ");
+		printf("}\n");
+	}
 }
 
 void destroy_tree(Node *root) {
