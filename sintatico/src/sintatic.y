@@ -11,17 +11,20 @@
 #include "tree.h"
 
 typedef enum Rules {
-	program = 0
+	ini = 0
+	,program
+	,function_declaration
+	,paramenters
+	,parameters_list
+	,parameter
+	,type_identifier
+	,statments
 	,expression
 	,expression_1
 	,expression_2
 	,expression_3
 	,assignment
 	,number
-	,function_declaration
-	,type_identifier
-	,paramenters
-	,statments
 } Rules;
 }
 
@@ -38,17 +41,22 @@ typedef enum Rules {
 }
 
 %code {
-    char rulesNames[100][100] = {"program"
-                        ,"expression"
-                        ,"expression_1"
-                        ,"expression_2"
-                        ,"expression_3"
-                        ,"assignment"
-                        ,"number"
-                    	,"function_declaration"
-						,"type_identifier"
-						,"paramenters"
-						,"statments"};
+    char rulesNames[100][100] = {
+    	"ini"
+		,"program"
+		,"function_declaration"
+		,"paramenters"
+		,"parameters_list"
+		,"parameter"
+		,"type_identifier"
+		,"statments"
+		,"expression"
+		,"expression_1"
+		,"expression_2"
+		,"expression_3"
+		,"assignment"
+		,"number"
+    };
 }
 
 %token <op> Integer "integer"
@@ -67,16 +75,18 @@ typedef enum Rules {
 
 %type <node> ini
 %type <node> program
+%type <node> function_declaration
+%type <node> paramenters
+%type <node> parameters_list
+%type <node> parameter
+%type <node> type_identifier
+%type <node> statments
 %type <node> expression
 %type <node> expression_1
 %type <node> expression_2
 %type <node> expression_3
 %type <node> assignment
 %type <node> number
-%type <node> function_declaration
-%type <node> type_identifier
-%type <node> paramenters
-%type <node> statments
 
 
 %start ini
@@ -87,6 +97,7 @@ ini:
 	program {
 		$$ = new_node();
 		add_child($$, $1);
+		$$->type = rulesNames[ini];
 		show_tree($$, 1);
 	}
 
@@ -95,8 +106,6 @@ program:
 		$$ = new_node();
 		add_child($$, $1);
 		$$->type = rulesNames[program];
-		show_tree($$, 1);
-		$$->op[0] = 0;
 	}
 
 function_declaration:
@@ -106,22 +115,63 @@ function_declaration:
 		add_child($$, $3);
 		add_child($$, $5);
 		$$->type = rulesNames[function_declaration];
-		$$->op[0] = 0;
 	}
 
 paramenters:
-	'x' {
+	parameters_list {
 		$$ = new_node();
+		add_child($$, $1);
+		$$->type = rulesNames[paramenters];
+	}
+	| {
+		$$ = new_node();
+		$$->type = rulesNames[paramenters];
+	}
+
+parameters_list:
+	parameter ',' parameters_list {
+		$$ = new_node();
+		add_child($$, $1);
+		add_child($$, $3);
+		$$->type = rulesNames[parameters_list];
+	}
+	| parameter {
+		$$ = new_node();
+		add_child($$, $1);
+		$$->type = rulesNames[parameters_list];
+	}
+
+parameter:
+	type_identifier Id {
+		$$ = new_node();
+		add_child($$, $1);
+		$$->type = rulesNames[parameter];
+		strcpy($$->op, $2);
+	}
+	| type_identifier Id '[' ']' {
+		$$ = new_node();
+		add_child($$, $1);
+		$$->type = rulesNames[parameter];
+		strcpy($$->op, $2);
 	}
 
 type_identifier:
-	'y' {
+	ArrayOp ArrayType {
 		$$ = new_node();
+		$$->type = rulesNames[type_identifier];
+		strcpy($$->op, $1);
+		strcat($$->op, $2);
+	} |
+	Type {
+		$$ = new_node();
+		$$->type = rulesNames[type_identifier];
+		strcpy($$->op, $1);
 	}
 
 statments:
-	'z' {
+	{
 		$$ = new_node();
+		$$->type = rulesNames[statments];
 	}
 
 expression: 

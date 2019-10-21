@@ -32,18 +32,14 @@ void show_tree(Node *root, int tabs) {
 		printf("Tree\n\n");
 	}
 	for (i = 0; i < tabs; ++i) printf("  ");
-	if (root->type) {
-		printf("%s %s%s", root->type, root->op, root->firstChild ? "{\n" : "\n");
-		NodeList *child = root->firstChild;
-		while(child){
-			show_tree(child->val, tabs + 1);
-			child = child->next;
-		}
-		for (i = 0; i < tabs; ++i) printf("  ");
-		printf("%s", root->firstChild ? "}\n" : "\n");
+	printf("%s %s%s", root->type, root->op, root->firstChild ? "{\n" : "\n");
+	NodeList *child = root->firstChild;
+	while(child){
+		show_tree(child->val, tabs + 1);
+		child = child->next;
 	}
-	else
-		printf("%d || %f\n", root->valueI, root->valueF);
+	for (i = 0; i < tabs; ++i) printf("  ");
+	printf("%s", root->firstChild ? "}\n" : "\n");
 }
 
 void destroy_tree(Node *root) {

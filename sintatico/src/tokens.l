@@ -158,6 +158,12 @@ int lines = 0, errors = 0;
     return '(';
 }
 
+")" {
+    yylval->op = (char*) malloc(sizeof(char) * strlen(yytext));
+    strcpy(yylval->op, yytext);
+    return ')';
+}
+
 "," {
     yylval->op = (char*) malloc(sizeof(char) * strlen(yytext));
     strcpy(yylval->op, yytext);
