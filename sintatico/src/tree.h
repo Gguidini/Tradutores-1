@@ -2,8 +2,8 @@
 #define TREE
 
 typedef struct Node Node;
-
 typedef struct NodeList NodeList;
+
 struct NodeList {
 	Node *val;
 	NodeList *next;

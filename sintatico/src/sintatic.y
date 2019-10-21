@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "tree.h"
+#include "symbol.h"
 
 typedef enum Rules {
 		ini = 0
@@ -46,6 +47,7 @@ struct Tok {
 	int line;
 	char *op;;
 };
+
 }
 
 
@@ -151,6 +153,8 @@ ini:
 		$$->type = rulesNames[ini];
 		show_tree($$, 1);
 		destroy_tree($$);
+		show_symbol();
+		destroy_symbol();
 	}
 
 program:
@@ -182,6 +186,7 @@ function_declaration:
 		add_child($$, $1);
 		add_child($$, $4);
 		add_child($$, $7);
+		add_symbol($1->op, $2.op, $2.line);
 		$$->type = rulesNames[function_declaration];
 		strcpy($$->op, $2.op);
 	}
@@ -220,6 +225,7 @@ parameter:
 		add_child($$, $1);
 		$$->type = rulesNames[parameter];
 		strcpy($$->op, $2.op);
+		add_symbol($1->op, $2.op, $2.line);
 	}
 	| type_identifier Id '[' ']' {
 		$$ = new_node();
@@ -227,6 +233,7 @@ parameter:
 		add_child($$, $1);
 		$$->type = rulesNames[parameter];
 		strcpy($$->op, $2.op);
+		add_symbol($1->op, $2.op, $2.line);
 	}
 
 type_identifier:
@@ -322,6 +329,7 @@ readi:
 		strcpy($$->op, $1.op);
 		strcpy($$->op, " ");
 		strcat($$->op, $2.op);
+		add_symbol("", $2.op, $2.line);
 	}
 
 
@@ -333,6 +341,7 @@ writi:
 		strcpy($$->op, $1.op);
 		strcpy($$->op, " ");
 		strcat($$->op, $2.op);
+		add_symbol("", $2.op, $2.line);
 	}
 
 function_call:
@@ -342,6 +351,7 @@ function_call:
 		add_child($$, $3);
 		$$->type = rulesNames[function_call];
 		strcpy($$->op, $1.op);
+		add_symbol("", $1.op, $1.line);
 	}
 
 arguments:
@@ -427,6 +437,7 @@ value:
 		$$->line = $1.line;
 		$$->type = rulesNames[value];
 		strcpy($$->op, $1.op);
+		add_symbol("", $1.op, $1.line);
 	}
 	| number {
 		$$ = new_node();
@@ -460,6 +471,7 @@ array_access:
 		strcat($$->op, "[");
 		strcat($$->op, $3->op);
 		strcat($$->op, "]");
+		add_symbol("", $1.op, $1.line);
 	}
 	| Id '[' expression ',' expression ']'  {
 		$$ = new_node();
@@ -473,6 +485,7 @@ array_access:
 		strcat($$->op, ",");
 		strcat($$->op, $5->op);
 		strcat($$->op, "]");
+		add_symbol("", $1.op, $1.line);
 	}
 
 variables_declaration:
@@ -482,6 +495,7 @@ variables_declaration:
 		add_child($$, $1);
 		add_child($$, $2);
 		$$->type = rulesNames[variables_declaration];
+		add_symbol($1->op, $2->op, $1->line);
 	}
 
 identifiers_list:
@@ -491,7 +505,6 @@ identifiers_list:
 		add_child($$, $3);
 		$$->type = rulesNames[identifiers_list];
 		strcpy($$->op, $1.op);
-		strcat($$->op, ",");
 	}
 	| Id '[' Integer ']' ',' identifiers_list {
 		$$ = new_node();
@@ -499,18 +512,12 @@ identifiers_list:
 		add_child($$, $6);
 		$$->type = rulesNames[identifiers_list];
 		strcpy($$->op, $1.op);
-		strcat($$->op, "[");
-		strcat($$->op, $3.op);
-		strcat($$->op, "],");
 	}
 	| Id '[' Integer ']' {
 		$$ = new_node();
 		$$->line = $1.line;
 		$$->type = rulesNames[identifiers_list];
 		strcpy($$->op, $1.op);
-		strcat($$->op, "[");
-		strcat($$->op, $3.op);
-		strcat($$->op, "]");
 	}
 	| Id {
 		$$ = new_node();

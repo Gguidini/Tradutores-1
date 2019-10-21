@@ -1,10 +1,13 @@
 all: sintatic
 
-sintatic: sintatic.tab.o lex.yy.o tree.o
-	gcc -o sintatic lex.yy.o sintatic.tab.o tree.o
+sintatic: sintatic.tab.o lex.yy.o tree.o symbol.o
+	gcc -o sintatic lex.yy.o sintatic.tab.o tree.o symbol.o
 
 tree.o:
 	gcc -c -o tree.o tree.c
+
+symbol.o:
+	gcc -c -o symbol.o symbol.c
 
 lex.yy.o: lex.yy.c sintatic.tab.c
 	gcc -c -o lex.yy.o lex.yy.c

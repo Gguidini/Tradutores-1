@@ -1,21 +1,11 @@
-	return v[0, n-1];
-}
-somaTudo int )<int>SumArray []v, return return;))()
-{}
-
-	int n;
-int i123, 123;
-	inInt n;
-	i=0;
-int main(){
-	SumArray<float123> v[,,,,];
+int func (int a, float asd, int vc) {
+	int a, b, c, d[10];
+	return d[1,3];
+	if(x==3){
+		while(batata[123] = 123 + 2304 / (123 + asd) - (2) ){
+			d[2,3] += ewew;
+		}
 	}
-		i+-;
-	while(i< n){
-	float ; floatint
+	outInt d;
+	inInt dxd;
 }
-	outInt 123 floatint;
-	sum = somaTudo(v ;,; n);
-	int ; sum;
-	sum ; = 0
-		v[i,i+1] += i;

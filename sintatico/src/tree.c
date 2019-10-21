@@ -30,7 +30,7 @@ void add_child(Node *no, Node *child) {
 void show_tree(Node *root, int tabs) {
 	int i;
 	if(tabs == 1){
-		printf("Tree\n\n");
+		printf("-----------------------------------------------\nTree\n\n");
 	}
 	printf("line:%-4d",root->line );
 	for (i = 0; i < tabs; ++i) printf("  ");
@@ -46,6 +46,9 @@ void show_tree(Node *root, int tabs) {
 		printf("}");
 	}
 	printf("\n");
+	if(tabs == 1){
+		printf("-----------------------------------------------\n");
+	}
 }
 
 void destroy_tree(Node *root) {
