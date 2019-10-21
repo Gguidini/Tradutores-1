@@ -1,4 +1,5 @@
 %define parse.error verbose
+%define parse.lac none
 %define api.pure
 %debug
 %defines
@@ -302,12 +303,6 @@ statment:
 		add_child($$, $1);
 		$$->type = rulesNames[statment];
 	}
-	| function_call ';' {
-		$$ = new_node();
-		$$->line = $1->line;
-		add_child($$, $1);
-		$$->type = rulesNames[statment];
-	}
 	| readi {
 		$$ = new_node();
 		$$->line = $1->line;
@@ -331,7 +326,6 @@ readi:
 		strcat($$->op, $2.op);
 		add_symbol("", $2.op, $2.line);
 	}
-
 
 writi:
 	Writi Id ';' {
@@ -624,30 +618,6 @@ assignment:
 		$$ = new_node();
 		$$->op[0] = '=';
 		$$->op[1] = 0;
-		$$->type = rulesNames[assignment];
-	}
-	| UOp '=' {
-		$$ = new_node();
-		$$->line = $1.line;
-		strcpy($$->op, $1.op);
-		$$->op[1] = '=';
-		$$->op[2] = 0;
-		$$->type = rulesNames[assignment];
-	}
-	| Op2 '=' {
-		$$ = new_node();
-		$$->line = $1.line;
-		strcpy($$->op, $1.op);
-		$$->op[1] = '=';
-		$$->op[2] = 0;
-		$$->type = rulesNames[assignment];
-	}
-	| Op3 '=' {
-		$$ = new_node();
-		$$->line = $1.line;
-		strcpy($$->op, $1.op);
-		$$->op[1] = '=';
-		$$->op[2] = 0;
 		$$->type = rulesNames[assignment];
 	}
 

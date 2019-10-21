@@ -150,7 +150,7 @@ int lines = 0, errors = 0;
     return UOp;
 }
 
-"=" {
+"="|{OP2}"="|{OP3}"="|{UOP}"=" {
     yylval->tok.op = (char*) malloc(sizeof(char) * strlen(yytext));
     strcpy(yylval->tok.op, yytext);
 	yylval->tok.line = lines;

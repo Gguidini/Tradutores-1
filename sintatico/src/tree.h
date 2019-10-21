@@ -14,8 +14,6 @@ struct Node {
 	NodeList *lastChild;
 	char* type;
 	char op[100];
-	int valueI;
-	float valueF;
 	int line;
 };
 

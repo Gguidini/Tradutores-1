@@ -19,7 +19,7 @@ sintatic.tab.o: sintatic.tab.c
 	gcc -c -o sintatic.tab.o sintatic.tab.c
 
 sintatic.tab.c:
-	bison sintatic.y
+	bison sintatic.y --report=all
 
 clean:
 	rm sintatic.tab.c sintatic.tab.h lex.yy.c *.o sintatic

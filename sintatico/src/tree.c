@@ -32,7 +32,7 @@ void show_tree(Node *root, int tabs) {
 	if(tabs == 1){
 		printf("-----------------------------------------------\nTree\n\n");
 	}
-	printf("line:%-4d",root->line );
+	printf("line:%4d",root->line );
 	for (i = 0; i < tabs; ++i) printf("  ");
 	printf("%s %s%s", root->type, root->op, root->firstChild ? "{\n" : "\n");
 	NodeList *child = root->firstChild;
@@ -40,7 +40,7 @@ void show_tree(Node *root, int tabs) {
 		show_tree(child->val, tabs + 1);
 		child = child->next;
 	}
-	printf("line:%-4d",root->line );
+	printf("line:%4d",root->line );
 	if(root->firstChild){
 		for (i = 0; i < tabs; ++i) printf("  ");
 		printf("}");
