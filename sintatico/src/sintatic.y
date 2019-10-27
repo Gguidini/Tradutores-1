@@ -49,6 +49,7 @@ struct Tok {
 	char *op;;
 };
 
+extern int yylex();
 }
 
 %union {
@@ -187,7 +188,7 @@ function_declaration:
 		add_child($$, $1);
 		add_child($$, $4);
 		add_child($$, $7);
-		add_symbol($1->op, $2.op, $2.line);
+		add_symbol($1->op, $2.op, $2.line, 1);
 		$$->type = rulesNames[function_declaration];
 		strcpy($$->op, $2.op);
 		free($2.op);
@@ -227,7 +228,7 @@ parameter:
 		add_child($$, $1);
 		$$->type = rulesNames[parameter];
 		strcpy($$->op, $2.op);
-		add_symbol($1->op, $2.op, $2.line);
+		add_symbol($1->op, $2.op, $2.line, 0);
 		free($2.op);
 	}
 	| type_identifier Id '[' ']' {
@@ -236,7 +237,7 @@ parameter:
 		add_child($$, $1);
 		$$->type = rulesNames[parameter];
 		strcpy($$->op, $2.op);
-		add_symbol($1->op, $2.op, $2.line);
+		add_symbol($1->op, $2.op, $2.line, 0);
 		free($2.op);
 	}
 
@@ -330,7 +331,6 @@ readi:
 		strcpy($$->op, $1.op);
 		strcpy($$->op, " ");
 		strcat($$->op, $2.op);
-		add_symbol("", $2.op, $2.line);
 		free($1.op);
 		free($2.op);
 	}
@@ -343,7 +343,6 @@ writi:
 		strcpy($$->op, $1.op);
 		strcpy($$->op, " ");
 		strcat($$->op, $2.op);
-		add_symbol("", $2.op, $2.line);
 		free($1.op);
 		free($2.op);
 	}
@@ -355,7 +354,6 @@ function_call:
 		add_child($$, $3);
 		$$->type = rulesNames[function_call];
 		strcpy($$->op, $1.op);
-		add_symbol("", $1.op, $1.line);
 		free($1.op);
 	}
 
@@ -447,7 +445,6 @@ value:
 		$$->line = $1.line;
 		$$->type = rulesNames[value];
 		strcpy($$->op, $1.op);
-		add_symbol("", $1.op, $1.line);
 		free($1.op);
 	}
 	| number {
@@ -482,7 +479,6 @@ array_access:
 		strcat($$->op, "[");
 		strcat($$->op, $3->op);
 		strcat($$->op, "]");
-		add_symbol("", $1.op, $1.line);
 		free($1.op);
 	}
 	| Id '[' expression ',' expression ']'  {
@@ -497,7 +493,6 @@ array_access:
 		strcat($$->op, ",");
 		strcat($$->op, $5->op);
 		strcat($$->op, "]");
-		add_symbol("", $1.op, $1.line);
 		free($1.op);
 	}
 
@@ -508,7 +503,20 @@ variables_declaration:
 		add_child($$, $1);
 		add_child($$, $2);
 		$$->type = rulesNames[variables_declaration];
-		add_symbol($1->op, $2->op, $1->line);
+		char idetifier[34];
+		int id = 0, n = strlen($2->op);
+		for(int i = 0; i < n; i++){
+			if($2->op[i] == ','){
+				idetifier[id] = 0;
+				add_symbol($1->op, idetifier, $1->line, 0);
+				id = 0;
+			}
+			else{
+				idetifier[id++] = $2->op[i];
+			}
+		}
+		idetifier[id] = 0;
+		add_symbol($1->op, idetifier, $1->line, 0);
 	}
 
 identifiers_list:
@@ -518,6 +526,8 @@ identifiers_list:
 		add_child($$, $3);
 		$$->type = rulesNames[identifiers_list];
 		strcpy($$->op, $1.op);
+		strcat($$->op, ",");
+		strcat($$->op, $3->op);
 		free($1.op);
 	}
 	| Id '[' Integer ']' ',' identifiers_list {
@@ -526,6 +536,8 @@ identifiers_list:
 		add_child($$, $6);
 		$$->type = rulesNames[identifiers_list];
 		strcpy($$->op, $1.op);
+		strcat($$->op, ",");
+		strcat($$->op, $6->op);
 		free($1.op);
 		free($3.op);
 	}

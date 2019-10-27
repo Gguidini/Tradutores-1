@@ -3,7 +3,7 @@ int somaTudo(SumArray<int> v[], int n){
 }
 
 int main(){
-	int n;
+	int n, m;
 	int variavelbemgrandecommaisde33caracteresblablablablablablablablablablablablablablabla;
 	inInt n;
 	n=x+2-1;

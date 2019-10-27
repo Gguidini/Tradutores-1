@@ -5,7 +5,7 @@
 
 SymbolList *list;
 
-void add_symbol(char type[], char name[], int line){
+void add_symbol(char type[], char name[], int line, int function){
 	if(list == 0){
 		list = (SymbolList*) malloc(sizeof(SymbolList));
 		list->firstSymbol = 0;
@@ -15,6 +15,7 @@ void add_symbol(char type[], char name[], int line){
 	strcpy(newSymbol->type, type);
 	strcpy(newSymbol->name, name);
 	newSymbol->line = line;
+	newSymbol->function = function;
 	newSymbol->next = 0;
 	if(list->firstSymbol){
 		list->lastSymbol->next = newSymbol;
@@ -29,9 +30,10 @@ void add_symbol(char type[], char name[], int line){
 void show_symbol(){
 	Symbol *aux = list->firstSymbol;
 	printf("Symbols Table\n\n");
-	printf("Line |      Type     | Name\n");
+	printf("Line |      Type     |                Name               | Is function\n");
+	printf("----------------------------------------------------------------------\n");
 	while(aux){
-		printf("%4d | %13s | %s\n", aux->line, aux->type, aux->name);
+		printf("%4d | %13s | %33s | %s\n", aux->line, aux->type, aux->name, aux->function ? "Yes" : "No");
 		aux = aux->next;
 	}
 }
