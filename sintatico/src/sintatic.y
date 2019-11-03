@@ -16,7 +16,6 @@ typedef enum Rules {
 		ini = 0
 		,program
 		,function_declaration
-		,paramenters
 		,parameters_list
 		,parameter
 		,type_identifier
@@ -74,11 +73,10 @@ extern int yylex();
 
 %code {
 	IdList idList;
-    char rulesNames[100][100] = {
+    char rulesNames[30][30] = {
 				"Ini"
 				,"Program"
 				,"Function_declaration"
-				,"Paramenters"
 				,"Parameters_list"
 				,"Parameter"
 				,"Type_identifier"
@@ -148,7 +146,6 @@ extern int yylex();
 %type <node> ini
 %type <node> program
 %type <node> function_declaration
-%type <node> paramenters
 %type <node> parameters_list
 %type <node> parameter
 %type <node> type_identifier
@@ -213,7 +210,7 @@ program:
 	}
 
 function_declaration:
-	type_identifier Id '(' paramenters ')' '{' statments '}' {
+	type_identifier Id '(' parameters_list ')' '{' statments '}' {
 		$$ = new_node();
 		$$->line = $1->line;
 
@@ -229,17 +226,20 @@ function_declaration:
 
 		$$->type = rulesNames[function_declaration];
 	}
-
-paramenters:
-	parameters_list {
+	| type_identifier Id '(' ')' '{' statments '}' {
 		$$ = new_node();
 		$$->line = $1->line;
+
 		add_child($$, $1);
-		$$->type = rulesNames[paramenters];
-	}
-	| {
-		$$ = new_node();
-		$$->type = rulesNames[paramenters];
+		add_tchild($$, $2.op, $2.line);
+		add_tchild($$, $3.op, $3.line);
+		add_tchild($$, $4.op, $4.line);
+		add_tchild($$, $5.op, $5.line);
+		add_child($$, $6);
+		add_tchild($$, $7.op, $7.line);
+		add_symbol($1->op, $2.op, $2.line, 1);
+
+		$$->type = rulesNames[function_declaration];
 	}
 
 parameters_list:
@@ -352,6 +352,7 @@ statment:
 		$$ = new_node();
 		$$->line = $1->line;
 		add_child($$, $1);
+		add_tchild($$, $2.op, $2.line);
 		$$->type = rulesNames[statment];
 	}
 	| readi {
@@ -603,10 +604,10 @@ expression:
 	Id assignment expression {
 		$$ = new_node();
 		$$->line = $1.line;
+		add_tchild($$, $1.op, $1.line);
 		add_child($$, $2);
 		add_child($$, $3);
 		$$->type = rulesNames[expression];
-		add_tchild($$, $1.op, $1.line);
 	}
 	| array_access assignment expression {
 		$$ = new_node();
@@ -698,6 +699,7 @@ expression_3:
 assignment:
 	'=' {
 		$$ = new_node();
+		$$->line = $1.line;
 		add_tchild($$, $1.op, $1.line);
 		$$->type = rulesNames[assignment];
 	}
