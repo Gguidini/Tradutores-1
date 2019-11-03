@@ -1,7 +1,7 @@
 %{
 	#include "sintatic.tab.h"
 
-    int lines = 1, errors = 0;
+    int lines = 1, errors = 0, pos = 0;
 %}
 
 %option noyywrap
@@ -38,6 +38,7 @@ int lines = 0, errors = 0;
     yylval->tok.op = (char*) malloc(sizeof(char) * (1 + strlen(yytext)));
     strcpy(yylval->tok.op, yytext);
 	yylval->tok.line = lines;
+    yylval->tok.pos = pos;
     return Integer;
 }
 
@@ -45,6 +46,7 @@ int lines = 0, errors = 0;
     yylval->tok.op = (char*) malloc(sizeof(char) * (1 + strlen(yytext)));
     strcpy(yylval->tok.op, yytext);
 	yylval->tok.line = lines;
+    yylval->tok.pos = pos;
     return Float;
 }
 
@@ -52,6 +54,7 @@ int lines = 0, errors = 0;
     yylval->tok.op = (char*) malloc(sizeof(char) * (1 + strlen(yytext)));
     strcpy(yylval->tok.op, yytext);
     yylval->tok.line = lines;
+    yylval->tok.pos = pos;
     return Return;
 }
 
@@ -59,6 +62,7 @@ int lines = 0, errors = 0;
     yylval->tok.op = (char*) malloc(sizeof(char) * (1 + strlen(yytext)));
     strcpy(yylval->tok.op, yytext);
     yylval->tok.line = lines;
+    yylval->tok.pos = pos;
     return If;
 }
 
@@ -66,6 +70,7 @@ int lines = 0, errors = 0;
     yylval->tok.op = (char*) malloc(sizeof(char) * (1 + strlen(yytext)));
     strcpy(yylval->tok.op, yytext);
     yylval->tok.line = lines;
+    yylval->tok.pos = pos;
     return Else;
 }
 
@@ -73,6 +78,7 @@ int lines = 0, errors = 0;
     yylval->tok.op = (char*) malloc(sizeof(char) * (1 + strlen(yytext)));
     strcpy(yylval->tok.op, yytext);
     yylval->tok.line = lines;
+    yylval->tok.pos = pos;
     return While;
 }
 
@@ -80,6 +86,7 @@ int lines = 0, errors = 0;
     yylval->tok.op = (char*) malloc(sizeof(char) * (1 + strlen(yytext)));
     strcpy(yylval->tok.op, yytext);
     yylval->tok.line = lines;
+    yylval->tok.pos = pos;
     return Writi;
 }
 
@@ -87,6 +94,7 @@ int lines = 0, errors = 0;
     yylval->tok.op = (char*) malloc(sizeof(char) * (1 + strlen(yytext)));
     strcpy(yylval->tok.op, yytext);
     yylval->tok.line = lines;
+    yylval->tok.pos = pos;
     return Readi;
 }
 
@@ -94,6 +102,7 @@ int lines = 0, errors = 0;
     yylval->tok.op = (char*) malloc(sizeof(char) * (1 + strlen(yytext)));
     strcpy(yylval->tok.op, yytext);
     yylval->tok.line = lines;
+    yylval->tok.pos = pos;
     return Type;
 }
 
@@ -101,6 +110,7 @@ int lines = 0, errors = 0;
     yylval->tok.op = (char*) malloc(sizeof(char) * (1 + strlen(yytext)));
     strcpy(yylval->tok.op, yytext);
     yylval->tok.line = lines;
+    yylval->tok.pos = pos;
     return ArrayType;
 }
 
@@ -108,6 +118,7 @@ int lines = 0, errors = 0;
     yylval->tok.op = (char*) malloc(sizeof(char) * (1 + strlen(yytext)));
     strcpy(yylval->tok.op, yytext);
     yylval->tok.line = lines;
+    yylval->tok.pos = pos;
     return ArrayOp;
 }
 
@@ -119,6 +130,7 @@ int lines = 0, errors = 0;
     yylval->tok.op = (char*) malloc(sizeof(char) * (1 + strlen(yytext)));
     strcpy(yylval->tok.op, yytext);
     yylval->tok.line = lines;
+    yylval->tok.pos = pos;
     return Id;
 }
 
@@ -126,6 +138,7 @@ int lines = 0, errors = 0;
     yylval->tok.op = (char*) malloc(sizeof(char) * (1 + strlen(yytext)));
     strcpy(yylval->tok.op, yytext);
     yylval->tok.line = lines;
+    yylval->tok.pos = pos;
     return Op1;
 }
 
@@ -133,6 +146,7 @@ int lines = 0, errors = 0;
     yylval->tok.op = (char*) malloc(sizeof(char) * (1 + strlen(yytext)));
     strcpy(yylval->tok.op, yytext);
     yylval->tok.line = lines;
+    yylval->tok.pos = pos;
     return Op2;
 }
 
@@ -140,6 +154,7 @@ int lines = 0, errors = 0;
     yylval->tok.op = (char*) malloc(sizeof(char) * (1 + strlen(yytext)));
     strcpy(yylval->tok.op, yytext);
     yylval->tok.line = lines;
+    yylval->tok.pos = pos;
     return Op3;
 }
 
@@ -147,6 +162,7 @@ int lines = 0, errors = 0;
     yylval->tok.op = (char*) malloc(sizeof(char) * (1 + strlen(yytext)));
     strcpy(yylval->tok.op, yytext);
     yylval->tok.line = lines;
+    yylval->tok.pos = pos;
     return UOp;
 }
 
@@ -154,6 +170,7 @@ int lines = 0, errors = 0;
     yylval->tok.op = (char*) malloc(sizeof(char) * (1 + strlen(yytext)));
     strcpy(yylval->tok.op, yytext);
 	yylval->tok.line = lines;
+    yylval->tok.pos = pos;
     return '=';
 }
 
@@ -161,6 +178,7 @@ int lines = 0, errors = 0;
     yylval->tok.op = (char*) malloc(sizeof(char) * (1 + strlen(yytext)));
     strcpy(yylval->tok.op, yytext);
     yylval->tok.line = lines;
+    yylval->tok.pos = pos;
     return '[';
 }
 
@@ -168,6 +186,7 @@ int lines = 0, errors = 0;
     yylval->tok.op = (char*) malloc(sizeof(char) * (1 + strlen(yytext)));
     strcpy(yylval->tok.op, yytext);
     yylval->tok.line = lines;
+    yylval->tok.pos = pos;
     return ']';
 }
 
@@ -175,6 +194,8 @@ int lines = 0, errors = 0;
     yylval->tok.op = (char*) malloc(sizeof(char) * (1 + strlen(yytext)));
     strcpy(yylval->tok.op, yytext);
     yylval->tok.line = lines;
+    yylval->tok.pos = pos;
+    pos++;
     return ';';
 }
 
@@ -182,6 +203,8 @@ int lines = 0, errors = 0;
     yylval->tok.op = (char*) malloc(sizeof(char) * (1 + strlen(yytext)));
     strcpy(yylval->tok.op, yytext);
     yylval->tok.line = lines;
+    yylval->tok.pos = pos;
+    pos++;
     return '{';
 }
 
@@ -189,6 +212,7 @@ int lines = 0, errors = 0;
     yylval->tok.op = (char*) malloc(sizeof(char) * (1 + strlen(yytext)));
     strcpy(yylval->tok.op, yytext);
     yylval->tok.line = lines;
+    yylval->tok.pos = pos;
     return '}';
 }
 
@@ -196,6 +220,7 @@ int lines = 0, errors = 0;
     yylval->tok.op = (char*) malloc(sizeof(char) * (1 + strlen(yytext)));
     strcpy(yylval->tok.op, yytext);
     yylval->tok.line = lines;
+    yylval->tok.pos = pos;
     return '(';
 }
 
@@ -203,6 +228,7 @@ int lines = 0, errors = 0;
     yylval->tok.op = (char*) malloc(sizeof(char) * (1 + strlen(yytext)));
     strcpy(yylval->tok.op, yytext);
     yylval->tok.line = lines;
+    yylval->tok.pos = pos;
     return ')';
 }
 
@@ -210,6 +236,7 @@ int lines = 0, errors = 0;
     yylval->tok.op = (char*) malloc(sizeof(char) * (1 + strlen(yytext)));
     strcpy(yylval->tok.op, yytext);
     yylval->tok.line = lines;
+    yylval->tok.pos = pos;
     return ',';
 }
 

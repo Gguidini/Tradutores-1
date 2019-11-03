@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "tree.h"
+#include "misc.h"
 
 Node* new_node() {
 	Node *no = (Node*) malloc(sizeof(Node));
@@ -65,13 +66,12 @@ void destroy_tree(Node *root) {
 		destroy_tree(child->val);
 		NodeList *aux = child;
 		child = child->next;
-		free(aux);
+		myfree((void**)&aux);
 	}
 	if(root->op){
-		free(root->op);
-		root->op = 0;
+		myfree((void**)&root->op);
 	}
-	free(root);
+	myfree((void**)&root);
 }
 
 void yyerror (char const *s) {

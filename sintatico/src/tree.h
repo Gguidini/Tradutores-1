@@ -14,7 +14,7 @@ struct Node {
 	NodeList *lastChild;
 	char* type;
 	char* op;
-	int line;
+	int line, pos;
 };
 
 Node* new_node();

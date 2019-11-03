@@ -11,6 +11,7 @@
 #include <string.h>
 #include "tree.h"
 #include "symbol.h"
+#include "misc.h"
 
 typedef enum Rules {
 		ini = 0
@@ -44,7 +45,7 @@ typedef enum Rules {
 
 typedef struct Tok Tok;
 struct Tok {
-	int line;
+	int line, pos;
 	char *op;
 };
 
@@ -115,6 +116,8 @@ extern int yylex();
     		idList.last = newItem;
     	}
     }
+
+    int pos;
 }
 
 %token <tok> Integer "integer"
@@ -222,7 +225,7 @@ function_declaration:
 		add_tchild($$, $6.op, $6.line);
 		add_child($$, $7);
 		add_tchild($$, $8.op, $8.line);
-		add_symbol($1->op, $2.op, $2.line, 1);
+		add_symbol($1->op, $2.op, $2.line, $2.pos, 1);
 
 		$$->type = rulesNames[function_declaration];
 	}
@@ -237,7 +240,7 @@ function_declaration:
 		add_tchild($$, $5.op, $5.line);
 		add_child($$, $6);
 		add_tchild($$, $7.op, $7.line);
-		add_symbol($1->op, $2.op, $2.line, 1);
+		add_symbol($1->op, $2.op, $2.line, $2.pos, 1);
 
 		$$->type = rulesNames[function_declaration];
 	}
@@ -264,7 +267,7 @@ parameter:
 		$$->line = $1->line;
 		add_child($$, $1);
 		$$->type = rulesNames[parameter];
-		add_symbol($1->op, $2.op, $2.line, 0);
+		add_symbol($1->op, $2.op, $2.line, $2.pos, 0);
 		add_tchild($$, $2.op, $2.line);
 	}
 	| type_identifier Id '[' ']' {
@@ -272,7 +275,7 @@ parameter:
 		$$->line = $1->line;
 		add_child($$, $1);
 		$$->type = rulesNames[parameter];
-		add_symbol($1->op, $2.op, $2.line, 0);
+		add_symbol($1->op, $2.op, $2.line, $2.pos, 0);
 		add_tchild($$, $2.op, $2.line);
 		add_tchild($$, $3.op, $3.line);
 		add_tchild($$, $4.op, $4.line);
@@ -554,8 +557,8 @@ variables_declaration:
 		$$->type = rulesNames[variables_declaration];
 		while(idList.first){
 			IdItem *aux = idList.first->next;
-			add_symbol($1->op, idList.first->id, $1->line, 0);
-			free(idList.first);
+			add_symbol($1->op, idList.first->id, $1->line, $2->pos, 0);
+			myfree((void**)&idList.first);
 			idList.first = aux;
 		}
 	}
@@ -568,6 +571,7 @@ identifiers_list:
 		add_tchild($$, $2.op, $2.line);
 		add_child($$, $3);
 		$$->type = rulesNames[identifiers_list];
+		$$->pos = $1.pos;
 		addIdItem($1.op);
 	}
 	| Id '[' Integer ']' ',' identifiers_list {
@@ -580,6 +584,7 @@ identifiers_list:
 		add_tchild($$, $5.op, $5.line);
 		add_child($$, $6);
 		$$->type = rulesNames[identifiers_list];
+		$$->pos = $1.pos;
 		addIdItem($1.op);
 	}
 	| Id '[' Integer ']' {
@@ -590,6 +595,7 @@ identifiers_list:
 		add_tchild($$, $2.op, $2.line);
 		add_tchild($$, $3.op, $3.line);
 		add_tchild($$, $4.op, $4.line);
+		$$->pos = $1.pos;
 		addIdItem($1.op);
 	}
 	| Id {
@@ -597,6 +603,7 @@ identifiers_list:
 		$$->line = $1.line;
 		$$->type = rulesNames[identifiers_list];
 		add_tchild($$, $1.op, $1.line);
+		$$->pos = $1.pos;
 		addIdItem($1.op);
 	}
 
@@ -722,5 +729,6 @@ number:
 
 int main (void) {
 	idList.first = idList.last = 0;
+	pos = 0;
 	return yyparse();
 }

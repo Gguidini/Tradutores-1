@@ -7,7 +7,7 @@ typedef struct SymbolList SymbolList;
 struct Symbol {
 	char type[100];
 	char name[100];
-	int line, function;
+	int line, function, pos;
 	Symbol *next;
 };
 
@@ -15,7 +15,7 @@ struct SymbolList {
 	Symbol *firstSymbol, *lastSymbol;
 };
 
-void add_symbol(char type[], char name[], int line, int function);
+void add_symbol(char type[], char name[], int line, int pos, int function);
 void destroy_symbol();
 void show_symbol();
 
