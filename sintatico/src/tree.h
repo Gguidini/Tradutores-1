@@ -13,7 +13,7 @@ struct Node {
 	NodeList *firstChild;
 	NodeList *lastChild;
 	char* type;
-	char op[100];
+	char* op;
 	int line;
 };
 

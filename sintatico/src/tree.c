@@ -6,7 +6,7 @@ Node* new_node() {
 	Node *no = (Node*) malloc(sizeof(Node));
 	no->firstChild = 0;
 	no->lastChild = 0;
-	no->op[0] = 0;
+	no->op = 0;
 	no->line = 0;
 	return no;
 }
@@ -34,7 +34,7 @@ void show_tree(Node *root, int tabs) {
 	}
 	printf("line:%4d",root->line );
 	for (i = 0; i < tabs; ++i) printf("  ");
-	printf("%s %s%s", root->type, root->op, root->firstChild ? "{\n" : "\n");
+	printf("%s %s", root->type, root->firstChild ? "{\n" : "\n");
 	NodeList *child = root->firstChild;
 	while(child){
 		show_tree(child->val, tabs + 1);
