@@ -33,7 +33,7 @@ int hasha(char *s){
 	int hash = 0;
 	int i = 0;
 	while(s[i]){
-		hash += (s[i] * 256) % tableSize;
+		hash = (hash * 256) % tableSize + s[i];
 		i++;
 	}
 	return hash % tableSize;
@@ -53,6 +53,16 @@ void add_symbol(char type[], char name[], int line, int pos, int function){
 	newSymbol->function = function;
 	newSymbol->next = 0;
 	insert(newSymbol);
+}
+
+Symbol* find_symbol(char *s){
+	int id = hasha(s);
+	if(sTable[id] == 0) return 0;
+	Symbol *symbol = sTable[id]->firstSymbol;
+	while(symbol && strcmp(symbol->name, s) != 0){
+		symbol = symbol->next;
+	}
+	return symbol;
 }
 
 void show_symbol(){

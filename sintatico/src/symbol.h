@@ -17,8 +17,9 @@ struct SymbolList {
 	Symbol *firstSymbol, *lastSymbol;
 };
 
-void add_symbol(char type[], char name[], int line, int pos, int function);
+void add_symbol(char*, char*, int, int, int);
 void destroy_symbol();
 void show_symbol();
+Symbol* find_symbol(char*);
 
 #endif

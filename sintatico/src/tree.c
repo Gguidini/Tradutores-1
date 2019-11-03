@@ -13,16 +13,14 @@ Node* new_node() {
 }
 
 void add_child(Node *no, Node *child) {
+	NodeList* newNode = (NodeList*) malloc(sizeof(NodeList));
+	newNode->val = child;
+	newNode->next = 0;
 	if(no->firstChild == 0){
-		no->firstChild = (NodeList*) malloc(sizeof(NodeList));
-		no->firstChild->val = child;
-		no->firstChild->next = 0;
+		no->firstChild = newNode;
 		no->lastChild = no->firstChild;
 	}
 	else{
-		NodeList* newNode = (NodeList*) malloc(sizeof(NodeList));
-		newNode->val = child;
-		newNode->next = 0;
 		no->lastChild->next = newNode;
 		no->lastChild = newNode;
 	}
@@ -39,10 +37,11 @@ void add_tchild(Node *no, char *op, int line){
 void show_tree(Node *root, int tabs) {
 	int i;
 	if(tabs == 1){
-		printf("-----------------------------------------------\nTree\n\n");
+		printf("------------------------------------------------\nTree\n\n");
 	}
 	printf("line:%4d",root->line );
-	for (i = 0; i < tabs; ++i) printf("  ");
+	for (i = 0; i < tabs-1; ++i) printf(" |");
+	printf(" ");
 	printf("%s %s%s", root->type == 0 ? "Token" : root->type, root->op == 0 ? "" : root->op, root->firstChild ? "{\n" : "\n");
 	NodeList *child = root->firstChild;
 	while(child){
@@ -50,13 +49,14 @@ void show_tree(Node *root, int tabs) {
 		child = child->next;
 	}
 	printf("line:%4d",root->line );
+	for (i = 0; i < tabs-1; ++i) printf(" |");
+	printf(" ");
 	if(root->firstChild){
-		for (i = 0; i < tabs; ++i) printf("  ");
 		printf("}");
 	}
 	printf("\n");
 	if(tabs == 1){
-		printf("-----------------------------------------------\n");
+		printf("------------------------------------------------\n");
 	}
 }
 
