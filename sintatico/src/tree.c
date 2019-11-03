@@ -39,7 +39,7 @@ void show_tree(Node *root, int tabs) {
 	if(tabs == 1){
 		printf("------------------------------------------------\nTree\n\n");
 	}
-	printf("line:%4d",root->line );
+	printf("line:%3d",root->line );
 	for (i = 0; i < tabs-1; ++i) printf(" |");
 	printf(" ");
 	printf("%s %s%s", root->type == 0 ? "Token" : root->type, root->op == 0 ? "" : root->op, root->firstChild ? "{\n" : "\n");
@@ -48,13 +48,13 @@ void show_tree(Node *root, int tabs) {
 		show_tree(child->val, tabs + 1);
 		child = child->next;
 	}
-	printf("line:%4d",root->line );
-	for (i = 0; i < tabs-1; ++i) printf(" |");
-	printf(" ");
 	if(root->firstChild){
+		printf("line:%3d",root->line );
+		for (i = 0; i < tabs-1; ++i) printf(" |");
+		printf(" ");
 		printf("}");
+		printf("\n");
 	}
-	printf("\n");
 	if(tabs == 1){
 		printf("------------------------------------------------\n");
 	}
