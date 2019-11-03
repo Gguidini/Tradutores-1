@@ -1,4 +1,5 @@
 int somaTudo(SumArray<int> v[], int n){
+	int onfunc;
 	return v[0, n];
 }
 

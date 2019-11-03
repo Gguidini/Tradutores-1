@@ -4,6 +4,8 @@
 typedef struct Symbol Symbol;
 typedef struct SymbolList SymbolList;
 
+#define tableSize 100005
+
 struct Symbol {
 	char type[100];
 	char name[100];
