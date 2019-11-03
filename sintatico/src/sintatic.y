@@ -75,34 +75,34 @@ extern int yylex();
 %code {
 	IdList idList;
     char rulesNames[100][100] = {
-				"ini"
-				,"program"
-				,"function_declaration"
-				,"paramenters"
-				,"parameters_list"
-				,"parameter"
-				,"type_identifier"
-				,"statments"
-				,"statment"
-				,"readi"
-				,"writi"
-				,"function_call"
-				,"arguments"
-				,"arguments_list"
-				,"conditional"
-				,"else_if"
-				,"loop"
-				,"retrn"
-				,"value"
-				,"array_access"
-				,"variables_declaration"
-				,"identifiers_list"
-				,"expression"
-				,"expression_1"
-				,"expression_2"
-				,"expression_3"
-				,"assignment"
-				,"number"
+				"Ini"
+				,"Program"
+				,"Function_declaration"
+				,"Paramenters"
+				,"Parameters_list"
+				,"Parameter"
+				,"Type_identifier"
+				,"Statments"
+				,"Statment"
+				,"Readi"
+				,"Writi"
+				,"Function_call"
+				,"Arguments"
+				,"Arguments_list"
+				,"Conditional"
+				,"Else_if"
+				,"Loop"
+				,"Retrn"
+				,"Value"
+				,"Array_access"
+				,"Variables_declaration"
+				,"Identifiers_list"
+				,"Expression"
+				,"Expression_1"
+				,"Expression_2"
+				,"Expression_3"
+				,"Assignment"
+				,"Number"
     };
 
     void addIdItem(char *id){
@@ -136,6 +136,14 @@ extern int yylex();
 %token <tok> Op3 "op3"
 %token <tok> UOp "uop"
 %token <tok> '=' "assignment"
+%token <tok> '('
+%token <tok> ')'
+%token <tok> '{'
+%token <tok> '}'
+%token <tok> '['
+%token <tok> ']'
+%token <tok> ';'
+%token <tok> ','
  
 %type <node> ini
 %type <node> program
@@ -208,13 +216,18 @@ function_declaration:
 	type_identifier Id '(' paramenters ')' '{' statments '}' {
 		$$ = new_node();
 		$$->line = $1->line;
+
 		add_child($$, $1);
+		add_tchild($$, $2.op, $2.line);
+		add_tchild($$, $3.op, $3.line);
 		add_child($$, $4);
+		add_tchild($$, $5.op, $5.line);
+		add_tchild($$, $6.op, $6.line);
 		add_child($$, $7);
+		add_tchild($$, $8.op, $8.line);
 		add_symbol($1->op, $2.op, $2.line, 1);
+
 		$$->type = rulesNames[function_declaration];
-		free($2.op);
-		free($1->op);
 	}
 
 paramenters:
@@ -234,6 +247,7 @@ parameters_list:
 		$$ = new_node();
 		$$->line = $1->line;
 		add_child($$, $1);
+		add_tchild($$, $2.op, $2.line);
 		add_child($$, $3);
 		$$->type = rulesNames[parameters_list];
 	}
@@ -251,8 +265,7 @@ parameter:
 		add_child($$, $1);
 		$$->type = rulesNames[parameter];
 		add_symbol($1->op, $2.op, $2.line, 0);
-		free($2.op);
-		free($1->op);
+		add_tchild($$, $2.op, $2.line);
 	}
 	| type_identifier Id '[' ']' {
 		$$ = new_node();
@@ -260,8 +273,9 @@ parameter:
 		add_child($$, $1);
 		$$->type = rulesNames[parameter];
 		add_symbol($1->op, $2.op, $2.line, 0);
-		free($2.op);
-		free($1->op);
+		add_tchild($$, $2.op, $2.line);
+		add_tchild($$, $3.op, $3.line);
+		add_tchild($$, $4.op, $4.line);
 	}
 
 type_identifier:
@@ -269,14 +283,21 @@ type_identifier:
 		$$ = new_node();
 		$$->line = $1.line;
 		$$->type = rulesNames[type_identifier];
-		free($1.op);
-		$$->op = $2.op;
+		add_tchild($$, $1.op, $1.line);
+		add_tchild($$, $2.op, $2.line);
+		char *aux = malloc(sizeof(char) * (strlen($1.op) + strlen($2.op) + 1));
+		strcpy(aux, $1.op);
+		strcat(aux, $2.op);
+		$$->op = aux;
 	} |
 	Type {
 		$$ = new_node();
 		$$->line = $1.line;
 		$$->type = rulesNames[type_identifier];
-		$$->op = $1.op;
+		add_tchild($$, $1.op, $1.line);
+		char *aux = malloc(sizeof(char) * (strlen($1.op) + 1));
+		strcpy(aux, $1.op);
+		$$->op = aux;
 	}
 
 statments:
@@ -290,11 +311,15 @@ statments:
 	| '{' statments '}' {
 		$$ = new_node();
 		$$->line = $2->line;
+		add_tchild($$, $1.op, $1.line);
 		add_child($$, $2);
+		add_tchild($$, $3.op, $3.line);
 		$$->type = rulesNames[statments];
 	}
-	|{
+	| statment {
 		$$ = new_node();
+		$$->line = $1->line;
+		add_child($$, $1);
 		$$->type = rulesNames[statments];
 	}
 
@@ -347,8 +372,9 @@ readi:
 		$$ = new_node();
 		$$->line = $1.line;
 		$$->type = rulesNames[readi];
-		free($1.op);
-		free($2.op);
+		add_tchild($$, $1.op, $1.line);
+		add_tchild($$, $2.op, $2.line);
+		add_tchild($$, $3.op, $3.line);
 	}
 
 writi:
@@ -356,17 +382,20 @@ writi:
 		$$ = new_node();
 		$$->line = $1.line;
 		$$->type = rulesNames[writi];
-		free($1.op);
-		free($2.op);
+		add_tchild($$, $1.op, $1.line);
+		add_tchild($$, $2.op, $2.line);
+		add_tchild($$, $3.op, $3.line);
 	}
 
 function_call:
 	Id '(' arguments ')'  {
 		$$ = new_node();
 		$$->line = $1.line;
+		add_tchild($$, $1.op, $1.line);
+		add_tchild($$, $2.op, $2.line);
 		add_child($$, $3);
+		add_tchild($$, $4.op, $4.line);
 		$$->type = rulesNames[function_call];
-		free($1.op);
 	}
 
 arguments:
@@ -386,6 +415,7 @@ arguments_list:
 		$$ = new_node();
 		$$->line = $1->line;
 		add_child($$, $1);
+		add_tchild($$, $2.op, $2.line);
 		add_child($$, $3);
 		$$->type = rulesNames[arguments_list];
 	}
@@ -400,50 +430,69 @@ conditional:
 	If '(' expression ')' '{' statments '}' else_if {
 		$$ = new_node();
 		$$->line = $1.line;
+		add_tchild($$, $1.op, $1.line);
+		add_tchild($$, $2.op, $2.line);
 		add_child($$, $3);
+		add_tchild($$, $4.op, $4.line);
+		add_tchild($$, $5.op, $5.line);
 		add_child($$, $6);
+		add_tchild($$, $7.op, $7.line);
 		add_child($$, $8);
 		$$->type = rulesNames[conditional];
-		free($1.op);
+	}
+	| If '(' expression ')' '{' statments '}' {
+		$$ = new_node();
+		$$->line = $1.line;
+		add_tchild($$, $1.op, $1.line);
+		add_tchild($$, $2.op, $2.line);
+		add_child($$, $3);
+		add_tchild($$, $4.op, $4.line);
+		add_tchild($$, $5.op, $5.line);
+		add_child($$, $6);
+		add_tchild($$, $7.op, $7.line);
+		$$->type = rulesNames[conditional];
 	}
 
 else_if:
 	Else conditional {
 		$$ = new_node();
 		$$->line = $1.line;
+		add_tchild($$, $1.op, $1.line);
 		add_child($$, $2);
 		$$->type = rulesNames[else_if];
-		free($1.op);
 	}
 	| Else '{' statments '}' {
 		$$ = new_node();
 		$$->line = $1.line;
+		add_tchild($$, $1.op, $1.line);
+		add_tchild($$, $2.op, $2.line);
 		add_child($$, $3);
+		add_tchild($$, $4.op, $4.line);
 		$$->type = rulesNames[else_if];
-		free($1.op);
 	} 
-	|{
-		$$ = new_node();
-		$$->type = rulesNames[statments];
-	}
 
 loop:
 	While '(' expression ')' '{' statments '}' {
 		$$ = new_node();
 		$$->line = $1.line;
+		add_tchild($$, $1.op, $1.line);
+		add_tchild($$, $2.op, $2.line);
 		add_child($$, $3);
+		add_tchild($$, $4.op, $4.line);
+		add_tchild($$, $5.op, $5.line);
 		add_child($$, $6);
+		add_tchild($$, $7.op, $7.line);
 		$$->type = rulesNames[loop];
-		free($1.op);
 	}
 
 retrn:
 	Return value ';' {
 		$$ = new_node();
 		$$->line = $1.line;
+		add_tchild($$, $1.op, $1.line);
 		add_child($$, $2);
+		add_tchild($$, $3.op, $3.line);
 		$$->type = rulesNames[retrn];
-		free($1.op);
 	}
 
 value:
@@ -451,7 +500,7 @@ value:
 		$$ = new_node();
 		$$->line = $1.line;
 		$$->type = rulesNames[value];
-		free($1.op);
+		add_tchild($$, $1.op, $1.line);
 	}
 	| number {
 		$$ = new_node();
@@ -477,16 +526,21 @@ array_access:
 		$$ = new_node();
 		$$->line = $1.line;
 		$$->type = rulesNames[array_access];
+		add_tchild($$, $1.op, $1.line);
+		add_tchild($$, $2.op, $2.line);
 		add_child($$, $3);
-		free($1.op);
+		add_tchild($$, $4.op, $4.line);
 	}
 	| Id '[' expression ',' expression ']'  {
 		$$ = new_node();
 		$$->line = $1.line;
 		$$->type = rulesNames[array_access];
+		add_tchild($$, $1.op, $1.line);
+		add_tchild($$, $2.op, $2.line);
 		add_child($$, $3);
+		add_tchild($$, $4.op, $4.line);
 		add_child($$, $5);
-		free($1.op);
+		add_tchild($$, $6.op, $6.line);
 	}
 
 variables_declaration:
@@ -495,21 +549,22 @@ variables_declaration:
 		$$->line = $1->line;
 		add_child($$, $1);
 		add_child($$, $2);
+		add_tchild($$, $3.op, $3.line);
 		$$->type = rulesNames[variables_declaration];
 		while(idList.first){
 			IdItem *aux = idList.first->next;
 			add_symbol($1->op, idList.first->id, $1->line, 0);
-			free(idList.first->id);
 			free(idList.first);
 			idList.first = aux;
 		}
-		free($1->op);
 	}
 
 identifiers_list:
 	Id ',' identifiers_list {
 		$$ = new_node();
 		$$->line = $1.line;
+		add_tchild($$, $1.op, $1.line);
+		add_tchild($$, $2.op, $2.line);
 		add_child($$, $3);
 		$$->type = rulesNames[identifiers_list];
 		addIdItem($1.op);
@@ -517,22 +572,30 @@ identifiers_list:
 	| Id '[' Integer ']' ',' identifiers_list {
 		$$ = new_node();
 		$$->line = $1.line;
+		add_tchild($$, $1.op, $1.line);
+		add_tchild($$, $2.op, $2.line);
+		add_tchild($$, $3.op, $3.line);
+		add_tchild($$, $4.op, $4.line);
+		add_tchild($$, $5.op, $5.line);
 		add_child($$, $6);
 		$$->type = rulesNames[identifiers_list];
-		free($3.op);
 		addIdItem($1.op);
 	}
 	| Id '[' Integer ']' {
 		$$ = new_node();
 		$$->line = $1.line;
 		$$->type = rulesNames[identifiers_list];
-		free($3.op);
+		add_tchild($$, $1.op, $1.line);
+		add_tchild($$, $2.op, $2.line);
+		add_tchild($$, $3.op, $3.line);
+		add_tchild($$, $4.op, $4.line);
 		addIdItem($1.op);
 	}
 	| Id {
 		$$ = new_node();
 		$$->line = $1.line;
 		$$->type = rulesNames[identifiers_list];
+		add_tchild($$, $1.op, $1.line);
 		addIdItem($1.op);
 	}
 
@@ -543,7 +606,7 @@ expression:
 		add_child($$, $2);
 		add_child($$, $3);
 		$$->type = rulesNames[expression];
-		free($1.op);
+		add_tchild($$, $1.op, $1.line);
 	}
 	| array_access assignment expression {
 		$$ = new_node();
@@ -565,9 +628,9 @@ expression_1:
 		$$ = new_node();
 		$$->line = $1->line;
 		add_child($$, $1);
+		add_tchild($$, $2.op, $2.line);
 		add_child($$, $3);
 		$$->type = rulesNames[expression_1];
-		free($2.op);
 	}
 	| expression_2 {
 		$$ = new_node();
@@ -581,9 +644,9 @@ expression_2:
 		$$ = new_node();
 		$$->line = $1->line;
 		add_child($$, $1);
+		add_tchild($$, $2.op, $2.line);
 		add_child($$, $3);
 		$$->type = rulesNames[expression_2];
-		free($2.op);
 	}
 	| expression_3 {
 		$$ = new_node();
@@ -597,23 +660,25 @@ expression_3:
 		$$ = new_node();
 		$$->line = $1->line;
 		add_child($$, $1);
+		add_tchild($$, $2.op, $2.line);
 		add_child($$, $3);
 		$$->type = rulesNames[expression_3];
-		free($2.op);
 	}
 	| UOp value {
 		$$ = new_node();
 		$$->line = $1.line;
+		add_tchild($$, $1.op, $1.line);
 		add_child($$, $2);	
 		$$->type = rulesNames[expression_3];
-		free($1.op);
 	}
 	| UOp '(' expression ')' {
 		$$ = new_node();
 		$$->line = $1.line;
+		add_tchild($$, $1.op, $1.line);
+		add_tchild($$, $2.op, $2.line);
 		add_child($$, $3);	
+		add_tchild($$, $4.op, $4.line);
 		$$->type = rulesNames[expression_3];
-		free($1.op);
 	}
 	| value {
 		$$ = new_node();
@@ -624,14 +689,16 @@ expression_3:
 	| '(' expression ')' {
 		$$ = new_node();
 		$$->line = $2->line;
+		add_tchild($$, $1.op, $1.line);
 		add_child($$, $2);	
+		add_tchild($$, $3.op, $3.line);
 		$$->type = rulesNames[expression_3];
 	}
 
 assignment:
 	'=' {
 		$$ = new_node();
-		free($1.op);
+		add_tchild($$, $1.op, $1.line);
 		$$->type = rulesNames[assignment];
 	}
 
@@ -640,13 +707,13 @@ number:
 		$$ = new_node();
 		$$->line = $1.line;
 		$$->type = rulesNames[number];
-		free($1.op);
+		add_tchild($$, $1.op, $1.line);
 	}
 	| Float {
 		$$ = new_node();
 		$$->line = $1.line;
 		$$->type = rulesNames[number];
-		free($1.op);
+		add_tchild($$, $1.op, $1.line);
 	}
 
 %%

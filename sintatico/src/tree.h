@@ -21,6 +21,8 @@ Node* new_node();
 
 void add_child(Node*, Node*);
 
+void add_tchild(Node*, char*, int);
+
 void show_tree(Node*, int);
 
 void destroy_tree(Node*);

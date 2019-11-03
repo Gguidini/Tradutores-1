@@ -11,4 +11,16 @@ int main(){
 	SumArray<int> v[10];
 	int i;
 	i=0;
+	while(i < 10){
+		if(i == 2){
+			x += x < 0-10 + x > 10 + x * y + 4;
+		}
+		else if(x < 2 * 3){
+			x = 2 * x * 2;
+		}
+		else{
+			i += 5;
+		}
+		i += 1;
+	}
 }

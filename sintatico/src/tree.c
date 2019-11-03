@@ -27,6 +27,14 @@ void add_child(Node *no, Node *child) {
 	}
 }
 
+void add_tchild(Node *no, char *op, int line){
+	Node *newNode = new_node();
+	newNode->type = 0;
+	newNode->line = line;
+	newNode->op = op;
+	add_child(no, newNode);
+}
+
 void show_tree(Node *root, int tabs) {
 	int i;
 	if(tabs == 1){
@@ -34,7 +42,7 @@ void show_tree(Node *root, int tabs) {
 	}
 	printf("line:%4d",root->line );
 	for (i = 0; i < tabs; ++i) printf("  ");
-	printf("%s %s", root->type, root->firstChild ? "{\n" : "\n");
+	printf("%s %s%s", root->type == 0 ? "Token" : root->type, root->op == 0 ? "" : root->op, root->firstChild ? "{\n" : "\n");
 	NodeList *child = root->firstChild;
 	while(child){
 		show_tree(child->val, tabs + 1);
@@ -58,6 +66,10 @@ void destroy_tree(Node *root) {
 		NodeList *aux = child;
 		child = child->next;
 		free(aux);
+	}
+	if(root->op){
+		free(root->op);
+		root->op = 0;
 	}
 	free(root);
 }

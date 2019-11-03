@@ -158,41 +158,57 @@ int lines = 0, errors = 0;
 }
 
 "[" {
+    yylval->tok.op = (char*) malloc(sizeof(char) * (1 + strlen(yytext)));
+    strcpy(yylval->tok.op, yytext);
     yylval->tok.line = lines;
     return '[';
 }
 
 "]" {
+    yylval->tok.op = (char*) malloc(sizeof(char) * (1 + strlen(yytext)));
+    strcpy(yylval->tok.op, yytext);
     yylval->tok.line = lines;
     return ']';
 }
 
 ";" {
+    yylval->tok.op = (char*) malloc(sizeof(char) * (1 + strlen(yytext)));
+    strcpy(yylval->tok.op, yytext);
     yylval->tok.line = lines;
     return ';';
 }
 
 "{" {
+    yylval->tok.op = (char*) malloc(sizeof(char) * (1 + strlen(yytext)));
+    strcpy(yylval->tok.op, yytext);
     yylval->tok.line = lines;
     return '{';
 }
 
 "}" {
+    yylval->tok.op = (char*) malloc(sizeof(char) * (1 + strlen(yytext)));
+    strcpy(yylval->tok.op, yytext);
     yylval->tok.line = lines;
     return '}';
 }
 
 "(" {
+    yylval->tok.op = (char*) malloc(sizeof(char) * (1 + strlen(yytext)));
+    strcpy(yylval->tok.op, yytext);
     yylval->tok.line = lines;
     return '(';
 }
 
 ")" {
+    yylval->tok.op = (char*) malloc(sizeof(char) * (1 + strlen(yytext)));
+    strcpy(yylval->tok.op, yytext);
     yylval->tok.line = lines;
     return ')';
 }
 
 "," {
+    yylval->tok.op = (char*) malloc(sizeof(char) * (1 + strlen(yytext)));
+    strcpy(yylval->tok.op, yytext);
     yylval->tok.line = lines;
     return ',';
 }
