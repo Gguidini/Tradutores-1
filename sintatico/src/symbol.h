@@ -24,7 +24,7 @@ void add_symbol(char*, char*, int, int, int, char*);
 void add_parameter(Symbol*, char*);
 void destroy_symbol();
 void show_symbol();
-Symbol* find_symbol(char*);
-int erase_symbol(char*);
+Symbol* find_symbol(char*, char*);
+int erase_symbol(char*, char*);
 
 #endif

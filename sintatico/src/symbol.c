@@ -61,26 +61,41 @@ void add_symbol(char type[], char name[], int line, int pos, int function, char*
 	insert(newSymbol);
 }
 
-Symbol* find_symbol(char *s){
-	int id = hasha(s);
+Symbol* find_symbol(char *s, char *preffix){
+	char name[(strlen(s) + strlen(preffix) + 2)];
+	name[0] = 0;
+	if(preffix[0] != 0){
+		strcpy(name, preffix);
+		strcat(name, ":");
+	}
+	strcat(name, s);
+	int id = hasha(name);
 	if(sTable[id] == 0) return 0;
 	Symbol *symbol = sTable[id]->firstSymbol;
-	while(symbol && strcmp(symbol->name, s) != 0){
+	while(symbol && strcmp(symbol->name, name) != 0){
 		symbol = symbol->next;
 	}
 	return symbol;
 }
 
-int erase_symbol(char *s){
-	int id = hasha(s);
+int erase_symbol(char *s, char *preffix){
+	char name[(strlen(s) + strlen(preffix) + 2)];
+	name[0] = 0;
+	if(preffix[0] != 0){
+		strcpy(name, preffix);
+		strcat(name, ":");
+	}
+	strcat(name, s);
+
+	int id = hasha(name);
 	if(sTable[id] == 0) return 0;
 	Symbol *symbol = sTable[id]->firstSymbol;
-	if(strcmp(symbol->name,s) == 0){
+	if(strcmp(symbol->name, name) == 0){
 		sTable[id]->firstSymbol = symbol->next;
 		myfree((void**)&symbol);
 		return 1;
 	}
-	while(symbol->next && strcmp(symbol->next->name, s) != 0){
+	while(symbol->next && strcmp(symbol->next->name, name) != 0){
 		symbol = symbol->next;
 	}
 	if(!symbol->next){

@@ -248,7 +248,14 @@ function_definition:
 		add_child($$, $1);
 		add_tchild($$, $2.op, $2.line);
 		strcpy(funcScope, $2.op);
-		add_symbol($1->op, $2.op, $1->line, $2.pos, 1, "");
+		
+		Symbol *onTable = find_symbol($2.op, "");
+		if(onTable){
+			printf("Error line %d: function %s redeclared, first occurrence on line %d\n", $1->line, $2.op, onTable->line);
+		}
+		else{
+			add_symbol($1->op, $2.op, $2.line, $2.pos, 1, "");
+		}
 
 		$$->type = rulesNames[function_definition];
 	}
@@ -302,8 +309,16 @@ parameter:
 		$$->line = $1->line;
 		add_child($$, $1);
 		$$->type = rulesNames[parameter];
-		add_symbol($1->op, $2.op, $2.line, $2.pos, 0, funcScope);
-		add_parameter(find_symbol(funcScope), $1->op);
+		
+		Symbol *onTable = find_symbol($2.op, funcScope);
+		if(onTable){
+			printf("Error line %d: variable %s redeclared, first occurrence on line %d\n", $1->line, $2.op, onTable->line);
+		}
+		else{
+			add_symbol($1->op, $2.op, $2.line, $2.pos, 0, funcScope);
+			add_parameter(find_symbol(funcScope, ""), $1->op);
+		}
+		
 		add_tchild($$, $2.op, $2.line);
 	}
 	| type_identifier Id '[' ']' {
@@ -311,8 +326,16 @@ parameter:
 		$$->line = $1->line;
 		add_child($$, $1);
 		$$->type = rulesNames[parameter];
-		add_symbol($1->op, $2.op, $2.line, $2.pos, 0, funcScope);
-		add_parameter(find_symbol(funcScope), $1->op);
+		
+		Symbol *onTable = find_symbol($2.op, funcScope);
+		if(onTable){
+			printf("Error line %d: variable %s redeclared, first occurrence on line %d\n", $1->line, $2.op, onTable->line);
+		}
+		else{
+			add_symbol($1->op, $2.op, $2.line, $2.pos, 0, funcScope);
+			add_parameter(find_symbol(funcScope, ""), $1->op);
+		}
+
 		add_tchild($$, $2.op, $2.line);
 		add_tchild($$, $3.op, $3.line);
 		add_tchild($$, $4.op, $4.line);
@@ -593,7 +616,13 @@ variables_declaration:
 		add_tchild($$, $3.op, $3.line);
 		$$->type = rulesNames[variables_declaration];
 		while(idList.first){
-			add_symbol($1->op, idList.first->id, $1->line, $2->pos, 0, funcScope);
+			Symbol *onTable = find_symbol(idList.first->id, funcScope);
+			if(onTable){
+				printf("Error line %d: variable %s redeclared, first occurrence on line %d\n", $1->line, idList.first->id, onTable->line);
+			}
+			else{
+				add_symbol($1->op, idList.first->id, $1->line, $2->pos, 0, funcScope);
+			}
 			IdItem *aux = idList.first->next;
 			myfree((void**)&idList.first);
 			idList.first = aux;
