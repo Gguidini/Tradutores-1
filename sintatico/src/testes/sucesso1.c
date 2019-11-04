@@ -3,6 +3,12 @@ int somaTudo(SumArray<int> v[], int n){
 	return v[0, n];
 }
 
+int a, b, c;
+
+float variavelbemgrandecommaisde34caracteresblablablablablablablablablablablablablablabla(){
+	int variavelbemgrandecommaisde35caracteresblablablablablablablablablablablablablablabla;
+}
+
 int main(){
 	int n, m;int x;
 	int variavelbemgrandecommaisde33caracteresblablablablablablablablablablablablablablabla;

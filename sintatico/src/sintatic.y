@@ -41,6 +41,9 @@ typedef enum Rules {
 		,expression_3
 		,assignment
 		,number
+		,function_body
+		,parameters
+		,function_definition
 } Rules;
 
 typedef struct Tok Tok;
@@ -59,7 +62,7 @@ struct IdItem {
 };
 
 struct IdList {
-	IdItem *first, *last;
+	IdItem *first, *last, *firstOut;
 };
 
 extern int yylex();
@@ -102,6 +105,9 @@ extern int yylex();
 				,"Expression_3"
 				,"Assignment"
 				,"Number"
+				,"Function_body"
+				,"Parameters"
+				,"Function_definition"
     };
 
     void addIdItem(char *id){
@@ -115,9 +121,14 @@ extern int yylex();
     		idList.last->next = newItem;
     		idList.last = newItem;
     	}
+    	if(idList.firstOut == 0){
+    		idList.firstOut = newItem;
+    	}
     }
 
     int pos;
+
+    char funcScope[34];
 }
 
 %token <tok> Integer "integer"
@@ -173,6 +184,9 @@ extern int yylex();
 %type <node> expression_3
 %type <node> assignment
 %type <node> number
+%type <node> function_body
+%type <node> parameters
+%type <node> function_definition
 
 %start ini
 
@@ -213,36 +227,57 @@ program:
 	}
 
 function_declaration:
-	type_identifier Id '(' parameters_list ')' '{' statments '}' {
+	function_definition parameters function_body {
 		$$ = new_node();
 		$$->line = $1->line;
 
 		add_child($$, $1);
-		add_tchild($$, $2.op, $2.line);
-		add_tchild($$, $3.op, $3.line);
-		add_child($$, $4);
-		add_tchild($$, $5.op, $5.line);
-		add_tchild($$, $6.op, $6.line);
-		add_child($$, $7);
-		add_tchild($$, $8.op, $8.line);
-		add_symbol($1->op, $2.op, $2.line, $2.pos, 1);
+		add_child($$, $2);
+		add_child($$, $3);
 
 		$$->type = rulesNames[function_declaration];
+
+		strcpy(funcScope, "1Global");
 	}
-	| type_identifier Id '(' ')' '{' statments '}' {
+
+function_definition:
+	type_identifier Id {
 		$$ = new_node();
 		$$->line = $1->line;
 
 		add_child($$, $1);
 		add_tchild($$, $2.op, $2.line);
-		add_tchild($$, $3.op, $3.line);
-		add_tchild($$, $4.op, $4.line);
-		add_tchild($$, $5.op, $5.line);
-		add_child($$, $6);
-		add_tchild($$, $7.op, $7.line);
-		add_symbol($1->op, $2.op, $2.line, $2.pos, 1);
+		strcpy(funcScope, $2.op);
+		add_symbol($1->op, $2.op, $1->line, $2.pos, 1, "");
 
-		$$->type = rulesNames[function_declaration];
+		$$->type = rulesNames[function_definition];
+	}
+
+function_body:
+	'{' statments '}'{
+		$$ = new_node();
+		$$->line = $1.line;
+		add_tchild($$, $1.op, $1.line);
+		add_child($$, $2);
+		add_tchild($$, $3.op, $3.line);
+		$$->type = rulesNames[function_body];
+	}
+
+parameters:
+	'(' parameters_list ')'{
+		$$ = new_node();
+		$$->line = $1.line;
+		add_tchild($$, $1.op, $1.line);
+		add_child($$, $2);
+		add_tchild($$, $3.op, $3.line);
+		$$->type = rulesNames[parameters];
+	}
+	| '(' ')'{
+		$$ = new_node();
+		$$->line = $1.line;
+		add_tchild($$, $1.op, $1.line);
+		add_tchild($$, $2.op, $2.line);
+		$$->type = rulesNames[parameters];	
 	}
 
 parameters_list:
@@ -267,7 +302,7 @@ parameter:
 		$$->line = $1->line;
 		add_child($$, $1);
 		$$->type = rulesNames[parameter];
-		add_symbol($1->op, $2.op, $2.line, $2.pos, 0);
+		add_symbol($1->op, $2.op, $2.line, $2.pos, 0, funcScope);
 		add_tchild($$, $2.op, $2.line);
 	}
 	| type_identifier Id '[' ']' {
@@ -275,7 +310,7 @@ parameter:
 		$$->line = $1->line;
 		add_child($$, $1);
 		$$->type = rulesNames[parameter];
-		add_symbol($1->op, $2.op, $2.line, $2.pos, 0);
+		add_symbol($1->op, $2.op, $2.line, $2.pos, 0, funcScope);
 		add_tchild($$, $2.op, $2.line);
 		add_tchild($$, $3.op, $3.line);
 		add_tchild($$, $4.op, $4.line);
@@ -556,8 +591,8 @@ variables_declaration:
 		add_tchild($$, $3.op, $3.line);
 		$$->type = rulesNames[variables_declaration];
 		while(idList.first){
+			add_symbol($1->op, idList.first->id, $1->line, $2->pos, 0, funcScope);
 			IdItem *aux = idList.first->next;
-			add_symbol($1->op, idList.first->id, $1->line, $2->pos, 0);
 			myfree((void**)&idList.first);
 			idList.first = aux;
 		}
@@ -728,7 +763,8 @@ number:
 %%
 
 int main (void) {
-	idList.first = idList.last = 0;
+	strcpy(funcScope, "1Global");
+	idList.first = idList.last = idList.firstOut = 0;
 	pos = 0;
 	return yyparse();
 }

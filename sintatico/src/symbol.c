@@ -44,10 +44,15 @@ void insert(Symbol *newSymbol){
 	insert_list(newSymbol, id);
 }
 
-void add_symbol(char type[], char name[], int line, int pos, int function){
+void add_symbol(char type[], char name[], int line, int pos, int function, char* preffix){
 	Symbol *newSymbol = (Symbol*) malloc(sizeof(Symbol));
 	strcpy(newSymbol->type, type);
-	strcpy(newSymbol->name, name);
+	newSymbol->name[0] = 0;
+	if(preffix[0]){
+		strcpy(newSymbol->name, preffix);
+		strcat(newSymbol->name, ":");
+	}
+	strcat(newSymbol->name, name);
 	newSymbol->line = line;
 	newSymbol->pos = pos;
 	newSymbol->function = function;
@@ -63,6 +68,27 @@ Symbol* find_symbol(char *s){
 		symbol = symbol->next;
 	}
 	return symbol;
+}
+
+int erase_symbol(char *s){
+	int id = hasha(s);
+	if(sTable[id] == 0) return 0;
+	Symbol *symbol = sTable[id]->firstSymbol;
+	if(strcmp(symbol->name,s) == 0){
+		sTable[id]->firstSymbol = symbol->next;
+		myfree((void**)&symbol);
+		return 1;
+	}
+	while(symbol->next && strcmp(symbol->next->name, s) != 0){
+		symbol = symbol->next;
+	}
+	if(!symbol->next){
+		return 0;
+	}
+	Symbol *aux = symbol->next;
+	symbol->next = aux->next;
+	myfree((void**)&aux);
+	return 1;
 }
 
 void show_symbol(){
