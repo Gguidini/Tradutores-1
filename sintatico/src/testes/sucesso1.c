@@ -5,7 +5,7 @@ int somaTudo(SumArray<int> v[], int n){
 
 int a, b, c;
 
-float variavelbemgrandecommaisde34caracteresblablablablablablablablablablablablablablabla(){
+float vi(){
 	int variavelbemgrandecommaisde35caracteresblablablablablablablablablablablablablablabla;
 }
 

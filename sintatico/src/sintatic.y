@@ -303,6 +303,7 @@ parameter:
 		add_child($$, $1);
 		$$->type = rulesNames[parameter];
 		add_symbol($1->op, $2.op, $2.line, $2.pos, 0, funcScope);
+		add_parameter(find_symbol(funcScope), $1->op);
 		add_tchild($$, $2.op, $2.line);
 	}
 	| type_identifier Id '[' ']' {
@@ -311,6 +312,7 @@ parameter:
 		add_child($$, $1);
 		$$->type = rulesNames[parameter];
 		add_symbol($1->op, $2.op, $2.line, $2.pos, 0, funcScope);
+		add_parameter(find_symbol(funcScope), $1->op);
 		add_tchild($$, $2.op, $2.line);
 		add_tchild($$, $3.op, $3.line);
 		add_tchild($$, $4.op, $4.line);
