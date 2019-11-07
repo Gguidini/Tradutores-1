@@ -128,6 +128,8 @@ extern int yylex();
 
     int pos;
 
+    IntStack *scopeStack;
+
     char funcScope[34];
 }
 
@@ -237,7 +239,7 @@ function_declaration:
 
 		$$->type = rulesNames[function_declaration];
 
-		strcpy(funcScope, "1Global");
+		scopeStack = intStackPop(scopeStack);
 	}
 
 function_definition:
@@ -247,17 +249,19 @@ function_definition:
 
 		add_child($$, $1);
 		add_tchild($$, $2.op, $2.line);
-		strcpy(funcScope, $2.op);
+		scopeStack = intStackPush(scopeStack, $2.pos);
 		
-		Symbol *onTable = find_symbol($2.op, "");
+		Symbol *onTable = find_symbol($2.op, scopeStack->val);
 		if(onTable){
 			printf("Error line %d: function %s redeclared, first occurrence on line %d\n", $1->line, $2.op, onTable->line);
 		}
 		else{
-			add_symbol($1->op, $2.op, $2.line, $2.pos, 1, "");
+			add_symbol($1->op, $2.op, $2.line, $2.pos, 1, scopeStack->val);
 		}
 
 		$$->type = rulesNames[function_definition];
+
+		strcpy(funcScope, $2.op);
 	}
 
 function_body:
@@ -310,13 +314,13 @@ parameter:
 		add_child($$, $1);
 		$$->type = rulesNames[parameter];
 		
-		Symbol *onTable = find_symbol($2.op, funcScope);
+		Symbol *onTable = find_symbol($2.op, scopeStack->val);
 		if(onTable){
 			printf("Error line %d: variable %s redeclared, first occurrence on line %d\n", $1->line, $2.op, onTable->line);
 		}
 		else{
-			add_symbol($1->op, $2.op, $2.line, $2.pos, 0, funcScope);
-			add_parameter(find_symbol(funcScope, ""), $1->op);
+			add_symbol($1->op, $2.op, $2.line, $2.pos, 0, scopeStack->val);
+			add_parameter(find_symbol(funcScope, scopeStack->val), $1->op);
 		}
 		
 		add_tchild($$, $2.op, $2.line);
@@ -327,13 +331,13 @@ parameter:
 		add_child($$, $1);
 		$$->type = rulesNames[parameter];
 		
-		Symbol *onTable = find_symbol($2.op, funcScope);
+		Symbol *onTable = find_symbol($2.op, scopeStack->val);
 		if(onTable){
 			printf("Error line %d: variable %s redeclared, first occurrence on line %d\n", $1->line, $2.op, onTable->line);
 		}
 		else{
-			add_symbol($1->op, $2.op, $2.line, $2.pos, 0, funcScope);
-			add_parameter(find_symbol(funcScope, ""), $1->op);
+			add_symbol($1->op, $2.op, $2.line, $2.pos, 0, scopeStack->val);
+			add_parameter(find_symbol(funcScope, scopeStack->val), $1->op);
 		}
 
 		add_tchild($$, $2.op, $2.line);
@@ -616,12 +620,12 @@ variables_declaration:
 		add_tchild($$, $3.op, $3.line);
 		$$->type = rulesNames[variables_declaration];
 		while(idList.first){
-			Symbol *onTable = find_symbol(idList.first->id, funcScope);
+			Symbol *onTable = find_symbol(idList.first->id, scopeStack->val);
 			if(onTable){
 				printf("Error line %d: variable %s redeclared, first occurrence on line %d\n", $1->line, idList.first->id, onTable->line);
 			}
 			else{
-				add_symbol($1->op, idList.first->id, $1->line, $2->pos, 0, funcScope);
+				add_symbol($1->op, idList.first->id, $1->line, $2->pos, 0, scopeStack->val);
 			}
 			IdItem *aux = idList.first->next;
 			myfree((void**)&idList.first);
@@ -794,7 +798,7 @@ number:
 %%
 
 int main (void) {
-	strcpy(funcScope, "1Global");
+	scopeStack = intStackPush(scopeStack, 0);
 	idList.first = idList.last = idList.firstOut = 0;
 	pos = 0;
 	return yyparse();

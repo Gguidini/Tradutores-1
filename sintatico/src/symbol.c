@@ -29,73 +29,55 @@ void insert_list(Symbol *newSymbol, int id){
 	}
 }
 
-int hasha(char *s){
+int hasha(char *s, int scope){
 	int hash = 0;
 	int i = 0;
 	while(s[i]){
 		hash = (hash * 256) % tableSize + s[i];
 		i++;
 	}
+	hash ^= scope;
 	return hash % tableSize;
 }
 
 void insert(Symbol *newSymbol){
-	int id = hasha(newSymbol->name);
+	int id = hasha(newSymbol->name, newSymbol->scope);
 	insert_list(newSymbol, id);
 }
 
-void add_symbol(char type[], char name[], int line, int pos, int function, char* preffix){
+void add_symbol(char type[], char name[], int line, int pos, int function, int scope){
 	Symbol *newSymbol = (Symbol*) malloc(sizeof(Symbol));
 	strcpy(newSymbol->type, type);
-	newSymbol->name[0] = 0;
-	if(preffix[0]){
-		strcpy(newSymbol->name, preffix);
-		strcat(newSymbol->name, ":");
-	}
-	strcat(newSymbol->name, name);
+	strcpy(newSymbol->name, name);
 	newSymbol->line = line;
 	newSymbol->pos = pos;
 	newSymbol->function = function;
 	newSymbol->next = 0;
 	newSymbol->firstParameter = 0;
+	newSymbol->scope = scope;
 	insert(newSymbol);
 }
 
-Symbol* find_symbol(char *s, char *preffix){
-	char name[(strlen(s) + strlen(preffix) + 2)];
-	name[0] = 0;
-	if(preffix[0] != 0){
-		strcpy(name, preffix);
-		strcat(name, ":");
-	}
-	strcat(name, s);
-	int id = hasha(name);
+Symbol* find_symbol(char *s, int scope){
+	int id = hasha(s, scope);
 	if(sTable[id] == 0) return 0;
 	Symbol *symbol = sTable[id]->firstSymbol;
-	while(symbol && strcmp(symbol->name, name) != 0){
+	while(symbol && (strcmp(symbol->name, s) != 0 || symbol->scope != scope)){
 		symbol = symbol->next;
 	}
 	return symbol;
 }
 
-int erase_symbol(char *s, char *preffix){
-	char name[(strlen(s) + strlen(preffix) + 2)];
-	name[0] = 0;
-	if(preffix[0] != 0){
-		strcpy(name, preffix);
-		strcat(name, ":");
-	}
-	strcat(name, s);
-
-	int id = hasha(name);
+int erase_symbol(char *s, int scope){
+	int id = hasha(s, scope);
 	if(sTable[id] == 0) return 0;
 	Symbol *symbol = sTable[id]->firstSymbol;
-	if(strcmp(symbol->name, name) == 0){
+	if(strcmp(symbol->name, s) == 0 && symbol->scope == scope){
 		sTable[id]->firstSymbol = symbol->next;
 		myfree((void**)&symbol);
 		return 1;
 	}
-	while(symbol->next && strcmp(symbol->next->name, name) != 0){
+	while(symbol->next && (strcmp(symbol->next->name, s) != 0 || symbol->next->scope != scope)){
 		symbol = symbol->next;
 	}
 	if(!symbol->next){
@@ -123,13 +105,13 @@ void add_parameter(Symbol *function, char *parameter){
 
 void show_symbol(){
 	printf("Symbols Table\n\n");
-	printf("Pos | Line |      Type     |                   Name                 | Is function | Pamareters\n");
+	printf("Pos | Line |      Type     |                   Name                 | Is function | Scope | Pamareters\n");
 	printf("----------------------------------------------------------------------------------------------\n");
 	IntList *id = firstTableId;
 	while(id){
 		Symbol *aux = sTable[id->val]->firstSymbol;
 		while(aux){
-			printf("%3d | %4d | %13s | %38s | %11s |", aux->pos, aux->line, aux->type, aux->name, aux->function ? "Yes" : "No");
+			printf("%3d | %4d | %13s | %38s | %11s | %5d |", aux->pos, aux->line, aux->type, aux->name, aux->function ? "Yes" : "No", aux->scope);
 			StringList *parameter = aux->firstParameter;
 			while(parameter){
 				printf("%s ", parameter->val);
