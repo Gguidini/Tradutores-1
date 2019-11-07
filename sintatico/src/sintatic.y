@@ -44,6 +44,8 @@ typedef enum Rules {
 		,function_body
 		,parameters
 		,function_definition
+		,ife
+		,elsee
 } Rules;
 
 typedef struct Tok Tok;
@@ -77,7 +79,7 @@ extern int yylex();
 
 %code {
 	IdList idList;
-    char rulesNames[30][30] = {
+    char rulesNames[32][30] = {
 				"Ini"
 				,"Program"
 				,"Function_declaration"
@@ -86,8 +88,8 @@ extern int yylex();
 				,"Type_identifier"
 				,"Statments"
 				,"Statment"
-				,"Readi"
-				,"Writi"
+				,"Read"
+				,"Write"
 				,"Function_call"
 				,"Arguments"
 				,"Arguments_list"
@@ -108,6 +110,8 @@ extern int yylex();
 				,"Function_body"
 				,"Parameters"
 				,"Function_definition"
+				,"If"
+				,"Else"
     };
 
     void addIdItem(char *id){
@@ -139,8 +143,8 @@ extern int yylex();
 %token <tok> If "if"
 %token <tok> Else "else"
 %token <tok> While "while"
-%token <tok> Writi "writi"
-%token <tok> Readi "readi"
+%token <tok> Write "write"
+%token <tok> Read "read"
 %token <tok> Type "type"
 %token <tok> ArrayType "arrayType"
 %token <tok> ArrayOp "arrayOp"
@@ -167,8 +171,8 @@ extern int yylex();
 %type <node> type_identifier
 %type <node> statments
 %type <node> statment
-%type <node> readi
-%type <node> writi
+%type <node> read
+%type <node> write
 %type <node> function_call
 %type <node> arguments
 %type <node> arguments_list
@@ -189,6 +193,8 @@ extern int yylex();
 %type <node> function_body
 %type <node> parameters
 %type <node> function_definition
+%type <node> if
+%type <node> else
 
 %start ini
 
@@ -249,18 +255,18 @@ function_definition:
 
 		add_child($$, $1);
 		add_tchild($$, $2.op, $2.line);
-		scopeStack = intStackPush(scopeStack, $2.pos);
 		
-		Symbol *onTable = find_symbol($2.op, scopeStack->val);
+		Symbol *onTable = find_symbol($2.op, -1);
 		if(onTable){
 			printf("Error line %d: function %s redeclared, first occurrence on line %d\n", $1->line, $2.op, onTable->line);
 		}
 		else{
-			add_symbol($1->op, $2.op, $2.line, $2.pos, 1, scopeStack->val);
+			add_symbol($1->op, $2.op, $2.line, $2.pos, 1, -1);
 		}
 
 		$$->type = rulesNames[function_definition];
 
+		scopeStack = intStackPush(scopeStack, $2.pos);
 		strcpy(funcScope, $2.op);
 	}
 
@@ -320,7 +326,7 @@ parameter:
 		}
 		else{
 			add_symbol($1->op, $2.op, $2.line, $2.pos, 0, scopeStack->val);
-			add_parameter(find_symbol(funcScope, scopeStack->val), $1->op);
+			add_parameter(find_symbol(funcScope, -1), $1->op);
 		}
 		
 		add_tchild($$, $2.op, $2.line);
@@ -422,21 +428,21 @@ statment:
 		add_tchild($$, $2.op, $2.line);
 		$$->type = rulesNames[statment];
 	}
-	| readi {
+	| read {
 		$$ = new_node();
 		$$->line = $1->line;
 		add_child($$, $1);
 		$$->type = rulesNames[statment];
 	}
-	| writi {
+	| write {
 		$$ = new_node();
 		$$->line = $1->line;
 		add_child($$, $1);
 		$$->type = rulesNames[statment];
 	}
 
-readi:
-	Readi Id ';' {
+read:
+	Read Id ';' {
 		$$ = new_node();
 		$$->line = $1.line;
 		$$->type = rulesNames[readi];
@@ -445,8 +451,8 @@ readi:
 		add_tchild($$, $3.op, $3.line);
 	}
 
-writi:
-	Writi Id ';' {
+write:
+	Write Id ';' {
 		$$ = new_node();
 		$$->line = $1.line;
 		$$->type = rulesNames[writi];
@@ -495,49 +501,63 @@ arguments_list:
 	}
 
 conditional:
-	If '(' expression ')' '{' statments '}' else_if {
+	if '{' statments '}' else_if {
 		$$ = new_node();
-		$$->line = $1.line;
-		add_tchild($$, $1.op, $1.line);
+		$$->line = $1->line;
+		add_child($$, $1);
 		add_tchild($$, $2.op, $2.line);
 		add_child($$, $3);
 		add_tchild($$, $4.op, $4.line);
-		add_tchild($$, $5.op, $5.line);
-		add_child($$, $6);
-		add_tchild($$, $7.op, $7.line);
-		add_child($$, $8);
+		add_child($$, $5);
 		$$->type = rulesNames[conditional];
 	}
-	| If '(' expression ')' '{' statments '}' {
+	| if '{' statments '}' {
 		$$ = new_node();
-		$$->line = $1.line;
-		add_tchild($$, $1.op, $1.line);
+		$$->line = $1->line;
+		add_child($$, $1);
 		add_tchild($$, $2.op, $2.line);
 		add_child($$, $3);
 		add_tchild($$, $4.op, $4.line);
-		add_tchild($$, $5.op, $5.line);
-		add_child($$, $6);
-		add_tchild($$, $7.op, $7.line);
 		$$->type = rulesNames[conditional];
 	}
 
-else_if:
-	Else conditional {
-		$$ = new_node();
-		$$->line = $1.line;
-		add_tchild($$, $1.op, $1.line);
-		add_child($$, $2);
-		$$->type = rulesNames[else_if];
-	}
-	| Else '{' statments '}' {
+if:
+	If '(' expression ')' {
 		$$ = new_node();
 		$$->line = $1.line;
 		add_tchild($$, $1.op, $1.line);
 		add_tchild($$, $2.op, $2.line);
 		add_child($$, $3);
 		add_tchild($$, $4.op, $4.line);
+		$$->type = rulesNames[ife];
+		scopeStack = intStackPush(scopeStack, $1.pos);
+	}
+else:
+	Else {
+		$$ = new_node();
+		$$->line = $1.line;
+		add_tchild($$, $1.op, $1.line);
+		$$->type = rulesNames[elsee];
+		scopeStack = intStackPush(scopeStack, $1.pos);
+	}
+
+else_if:
+	else conditional {
+		$$ = new_node();
+		$$->line = $1->line;
+		add_child($$, $1);
+		add_child($$, $2);
 		$$->type = rulesNames[else_if];
-	} 
+	}
+	| else '{' statments '}' {
+		$$ = new_node();
+		$$->line = $1->line;
+		add_child($$, $1);
+		add_tchild($$, $2.op, $2.line);
+		add_child($$, $3);
+		add_tchild($$, $4.op, $4.line);
+		$$->type = rulesNames[else_if];
+	}
 
 loop:
 	While '(' expression ')' '{' statments '}' {

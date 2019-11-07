@@ -37,7 +37,7 @@ int hasha(char *s, int scope){
 		i++;
 	}
 	hash ^= scope;
-	return hash % tableSize;
+	return ((hash % tableSize) + tableSize) % tableSize;
 }
 
 void insert(Symbol *newSymbol){
@@ -90,6 +90,7 @@ int erase_symbol(char *s, int scope){
 }
 
 void add_parameter(Symbol *function, char *parameter){
+	if(function == 0) return;
 	StringList *newParameter = (StringList*) malloc(sizeof(StringList));
 	newParameter->next = 0;
 	newParameter->val = (char*) malloc(sizeof(char) * (strlen(parameter) + 1));

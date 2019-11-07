@@ -7,6 +7,9 @@ int f(int n){
 int main(){
 	int n, m, a;
 	int m;
+	if(m == 3){
+		int a;
+	}
 }
 
 int a;

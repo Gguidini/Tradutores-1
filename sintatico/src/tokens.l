@@ -87,7 +87,7 @@ int lines = 0, errors = 0;
     strcpy(yylval->tok.op, yytext);
     yylval->tok.line = lines;
     yylval->tok.pos = pos;
-    return Writi;
+    return Write;
 }
 
 {IN} {
@@ -95,7 +95,7 @@ int lines = 0, errors = 0;
     strcpy(yylval->tok.op, yytext);
     yylval->tok.line = lines;
     yylval->tok.pos = pos;
-    return Readi;
+    return Read;
 }
 
 {BASIC_TYPE} {
