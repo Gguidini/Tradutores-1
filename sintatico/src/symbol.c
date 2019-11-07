@@ -106,13 +106,13 @@ void add_parameter(Symbol *function, char *parameter){
 
 void show_symbol(){
 	printf("Symbols Table\n\n");
-	printf("Pos | Line |      Type     |                   Name                 | Is function | Scope | Pamareters\n");
+	printf("Pos | Line |      Type     |                 Name              | Is function | Scope | Pamareters\n");
 	printf("----------------------------------------------------------------------------------------------\n");
 	IntList *id = firstTableId;
 	while(id){
 		Symbol *aux = sTable[id->val]->firstSymbol;
 		while(aux){
-			printf("%3d | %4d | %13s | %38s | %11s | %5d |", aux->pos, aux->line, aux->type, aux->name, aux->function ? "Yes" : "No", aux->scope);
+			printf("%3d | %4d | %13s | %33s | %11s | %5d |", aux->pos, aux->line, aux->type, aux->name, aux->function ? "Yes" : "No", aux->scope);
 			StringList *parameter = aux->firstParameter;
 			while(parameter){
 				printf("%s ", parameter->val);

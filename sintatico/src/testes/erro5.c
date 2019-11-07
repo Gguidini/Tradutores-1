@@ -9,7 +9,13 @@ int main(){
 	int m;
 	if(m == 3){
 		int a;
+	} else if(m == 2){
+		int a;
 	}
+	else{
+		int a;
+	}
+
 }
 
 int a;
