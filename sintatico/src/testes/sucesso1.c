@@ -6,21 +6,25 @@ int somaTudo(SumArray<int> v[], float x, int sda[], int n){
 int a, b, c;
 
 float vi(){
-	int variavelbemgrandecommaisde35caracteresblablablablablablablablablablablablablablabla;
+	int variavelbemgran;
+	return 123.23;
 }
+
+float n;
 
 int main(){
 	int n, m;int x;
-	int variavelbemgrandecommaisde33caracteresblablablablablablablablablablablablablablabla;
+	int variavelbemgran;
 	inInt n;
 	n=x+2-1;
-	z+=123;
 	SumArray<int> v[10];
+	int a[10];
+	somaTudo(v, 1.0, a, 24);
 	int i;
 	i=0;
 	while(i < 10){
 		if(i == 2){
-			x += x < 0-10 + x > 10 + x * y + 4;
+			x += x < 0-10 + x > 10 + x * 4;
 		}
 		else if(x < 2 * 3){
 			x = 2 * x * 2;

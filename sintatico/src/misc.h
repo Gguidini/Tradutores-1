@@ -26,8 +26,8 @@ struct IntStack {
 
 IntStack* intStackPop(IntStack*);
 IntStack* intStackPush(IntStack* ,int);
-IntStack* invert_m1(IntStack**);
 void popAllIntStack(IntStack*);
+IntStack* popAllIntStackm1(IntStack*);
 
 typedef enum DataType {
 		dInt = 0
@@ -43,5 +43,7 @@ typedef enum DataType {
 char dTypeName[8][20];
 
 DataType getDtype(char*);
+char wError[2000000];
+
 
 #endif

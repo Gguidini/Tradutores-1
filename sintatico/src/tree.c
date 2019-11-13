@@ -35,6 +35,7 @@ void add_tchild(Node *no, char *op, int line){
 }
 
 void show_tree(Node *root, int tabs) {
+	return;	
 	int i;
 	if(tabs == 1){
 		printf("------------------------------------------------\nTree\n\n");

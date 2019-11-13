@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 #include "misc.h"
 
 void myfree(void** p){
@@ -26,14 +27,14 @@ void popAllIntStack(IntStack *stack){
 	}
 }
 
-IntStack* invert_m1(IntStack **stack){
-	IntStack *inverted = 0;
-	*stack = intStackPop(*stack);
-	while((*stack) && (*stack)->val != -1){
-		inverted = intStackPush(inverted, (*stack)->val);
-		*stack = intStackPop(*stack);
+IntStack* popAllIntStackm1(IntStack *stack){
+	while(stack && stack->val != -1){
+		stack = intStackPop(stack);
 	}
-	return inverted;
+	if(stack){
+		stack = intStackPop(stack);
+	}
+	return stack;
 }
 
 char dTypeName[8][20] = {

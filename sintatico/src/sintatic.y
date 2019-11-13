@@ -260,15 +260,12 @@ function_declaration:
 		add_child($$, $1);
 		add_tchild($$, $2.op, $2.line);
 		
-		Symbol *onTable = find_symbol($2.op, -1);
-		if(!onTable && scopeStack->val == 0){
-			onTable = find_symbol($2.op, 0);
-		}
+		Symbol *onTable = find_symbol($2.op, 0);
 		if(onTable){
-			printf("Error line %d: function %s redeclared, first occurrence on line %d\n", $1->line, $2.op, onTable->line);
+			sprintf(wError + strlen(wError),"Error line %d: function %s redeclared, first occurrence on line %d\n", $1->line, $2.op, onTable->line);
 		}
 		else{
-			add_symbol(getDtype($1->op), $2.op, $2.line, $2.pos, 1, -1);
+			add_symbol(getDtype($1->op), $2.op, $2.line, $2.pos, 1, 0);
 		}
 
 		$$->type = rulesNames[function_declaration];
@@ -335,11 +332,11 @@ parameter:
 		
 		Symbol *onTable = find_symbol($2.op, scopeStack->val);
 		if(onTable){
-			printf("Error line %d: variable %s redeclared, first occurrence on line %d\n", $1->line, $2.op, onTable->line);
+			sprintf(wError + strlen(wError),"Error line %d: variable %s redeclared, first occurrence on line %d\n", $1->line, $2.op, onTable->line);
 		}
 		else{
 			add_symbol(getDtype($1->op), $2.op, $2.line, $2.pos, 0, scopeStack->val);
-			add_parameter(find_symbol(funcScope, -1), getDtype($1->op));
+			add_parameter(find_symbol(funcScope, 0), getDtype($1->op));
 		}
 		
 		add_tchild($$, $2.op, $2.line);
@@ -353,11 +350,11 @@ parameter:
 		
 		Symbol *onTable = find_symbol($2.op, scopeStack->val);
 		if(onTable){
-			printf("Error line %d: variable %s redeclared, first occurrence on line %d\n", $1->line, $2.op, onTable->line);
+			sprintf(wError + strlen(wError),"Error line %d: variable %s redeclared, first occurrence on line %d\n", $1->line, $2.op, onTable->line);
 		}
 		else{
 			add_symbol(getDtype($1->op), $2.op, $2.line, $2.pos, 0, scopeStack->val);
-			add_parameter(find_symbol(funcScope, -1), getDtype($1->op));
+			add_parameter(find_symbol(funcScope, 0), getDtype($1->op));
 		}
 
 		add_tchild($$, $2.op, $2.line);
@@ -500,19 +497,19 @@ function_call:
 		add_tchild($$, $4.op, $4.line);
 		$$->type = rulesNames[function_call];
 
-		Symbol *onTable = find_symbol($1.op, -1);
-		IntStack *argStack = invert_m1(&argumentStack);
+		Symbol *onTable = find_symbol($1.op, 0);
 		if(!onTable){
-			printf("Error line %d: function %s not declared\n", $1.line, $1.op);
+			sprintf(wError + strlen(wError),"Error line %d: function %s not declared\n", $1.line, $1.op);
+			lastType = 20;
 		}
 		else{
-			if(!check_arguments(onTable->parameters, argStack)){
-				printf("Error line %d: function %s used with wrong number of arguments\n", $1.line, $1.op);
+			if(!check_arguments(onTable->parameters, argumentStack, onTable, $1.line)){
+				sprintf(wError + strlen(wError),"Error line %d: function %s used with wrong number of arguments\n", $1.line, $1.op);
 			}
+			lastType = onTable->type;
 		}
-		popAllIntStack(argStack);
-
-		lastType = getDtype($1.op);
+		popAllIntStack(argumentStack);
+		argumentStack = 0;
 	}
 
 arguments:
@@ -522,13 +519,11 @@ arguments:
 		$$->line = $1->line;
 		add_child($$, $1);
 		$$->type = rulesNames[arguments];
-		argumentStack = intStackPush(argumentStack, -1);
 	}
 	| {
 		$$ = new_node();
 		root = $$;
 		$$->type = rulesNames[arguments];
-		argumentStack = intStackPush(argumentStack, -1);
 	}
 
 arguments_list:
@@ -654,10 +649,12 @@ value:
 
 		Symbol *onTable = stack_find($1.op, scopeStack);
 		if(!onTable){
-			printf("Error line %d: variable %s used but not declared\n", $1.line, $1.op);
+			sprintf(wError + strlen(wError),"Error line %d: variable %s used but not declared\n", $1.line, $1.op);
+			lastType = 0;
 		}
-
-		lastType = getDtype($1.op);
+		else{
+			lastType = onTable->type;
+		}
 	}
 	| number {
 		$$ = new_node();
@@ -694,9 +691,12 @@ array_access:
 
 		Symbol *onTable = stack_find($1.op, scopeStack);
 		if(!onTable){
-			printf("Error line %d: variable %s used but not declared\n", $1.line, $1.op);
+			sprintf(wError + strlen(wError),"Error line %d: variable %s used but not declared\n", $1.line, $1.op);
+			lastType = 0;
 		}
-		lastType = getDtype($1.op);
+		else{
+			lastType = onTable->type;
+		}
 	}
 	| Id '[' expression ',' expression ']'  {
 		$$ = new_node();
@@ -712,9 +712,12 @@ array_access:
 		
 		Symbol *onTable = stack_find($1.op, scopeStack);
 		if(!onTable){
-			printf("Error line %d: variable %s used but not declared\n", $1.line, $1.op);
+			sprintf(wError + strlen(wError),"Error line %d: variable %s used but not declared\n", $1.line, $1.op);
+			lastType = 0;
 		}
-		lastType = getDtype($1.op);
+		else{
+			lastType = onTable->type;
+		}
 	}
 
 variables_declaration:
@@ -729,11 +732,8 @@ variables_declaration:
 		DataType dType = getDtype($1->op);
 		while(idList.first){
 			Symbol *onTable = find_symbol(idList.first->id, scopeStack->val);
-			if(!onTable && scopeStack->val == 0){
-				onTable = find_symbol(idList.first->id, -1);
-			}
 			if(onTable){
-				printf("Error line %d: variable %s redeclared, first occurrence on line %d\n", $1->line, idList.first->id, onTable->line);
+				sprintf(wError + strlen(wError),"Error line %d: variable %s redeclared, first occurrence on line %d\n", $1->line, idList.first->id, onTable->line);
 			}
 			else{
 				add_symbol(dType, idList.first->id, $1->line, $2->pos, 0, scopeStack->val);
@@ -804,7 +804,7 @@ expression:
 		
 		Symbol *onTable = stack_find($1.op, scopeStack);
 		if(!onTable){
-			printf("Error line %d: variable %s used but not declared\n", $1.line, $1.op);
+			sprintf(wError + strlen(wError),"Error line %d: variable %s used but not declared\n", $1.line, $1.op);
 		}
 	}
 	| array_access assignment expression {
@@ -948,4 +948,7 @@ int main (void) {
 	destroy_symbol();
 	popAllIntStack(argumentStack);
 	popAllIntStack(scopeStack);
+
+	printf("\n");
+	printf("%s\n",wError );
 }
