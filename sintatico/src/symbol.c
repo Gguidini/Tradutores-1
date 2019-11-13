@@ -146,3 +146,14 @@ void destroy_symbol(){
 		id = nextId;
 	}
 }
+
+Symbol* stack_find(char* name, IntStack *scope_stack){
+	while(scope_stack){
+		Symbol *aux = find_symbol(name, scope_stack->val);
+		if(aux){
+			return aux;
+		}
+		scope_stack = scope_stack->prev;
+	}
+	return 0;
+}

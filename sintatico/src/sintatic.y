@@ -211,14 +211,14 @@ ini:
 	}
 
 program:
-	function_declaration {
+	function_definition {
 		$$ = new_node();
 		root = $$;
 		$$->line = $1->line;
 		add_child($$, $1);
 		$$->type = rulesNames[program];
 	}
-	| function_declaration program {
+	| function_definition program {
 		$$ = new_node();
 		root = $$;
 		$$->line = $1->line;
@@ -235,8 +235,8 @@ program:
 		$$->type = rulesNames[program];
 	}
 
-function_declaration:
-	function_definition parameters function_body {
+function_definition:
+	function_declaration parameters function_body {
 		$$ = new_node();
 		root = $$;
 		$$->line = $1->line;
@@ -245,12 +245,12 @@ function_declaration:
 		add_child($$, $2);
 		add_child($$, $3);
 
-		$$->type = rulesNames[function_declaration];
+		$$->type = rulesNames[function_definition];
 
 		scopeStack = intStackPop(scopeStack);
 	}
 
-function_definition:
+function_declaration:
 	type_identifier Id {
 		$$ = new_node();
 		root = $$;
@@ -260,6 +260,9 @@ function_definition:
 		add_tchild($$, $2.op, $2.line);
 		
 		Symbol *onTable = find_symbol($2.op, -1);
+		if(!onTable && scopeStack->val == 0){
+			onTable = find_symbol($2.op, 0);
+		}
 		if(onTable){
 			printf("Error line %d: function %s redeclared, first occurrence on line %d\n", $1->line, $2.op, onTable->line);
 		}
@@ -267,7 +270,7 @@ function_definition:
 			add_symbol($1->op, $2.op, $2.line, $2.pos, 1, -1);
 		}
 
-		$$->type = rulesNames[function_definition];
+		$$->type = rulesNames[function_declaration];
 
 		scopeStack = intStackPush(scopeStack, $2.pos);
 		strcpy(funcScope, $2.op);
@@ -495,10 +498,15 @@ function_call:
 		add_child($$, $3);
 		add_tchild($$, $4.op, $4.line);
 		$$->type = rulesNames[function_call];
+
+		Symbol *onTable = find_symbol($1.op, -1);
+		if(!onTable){
+			printf("Error line %d: function %s not declared\n", $1.line, $1.op);
+		}
 	}
 
 arguments:
-	arguments_list  {
+	arguments_list {
 		$$ = new_node();
 		root = $$;
 		$$->line = $1->line;
@@ -627,6 +635,11 @@ value:
 		$$->line = $1.line;
 		$$->type = rulesNames[value];
 		add_tchild($$, $1.op, $1.line);
+
+		Symbol *onTable = stack_find($1.op, scopeStack);
+		if(!onTable){
+			printf("Error line %d: variable %s used but not declared\n", $1.line, $1.op);
+		}
 	}
 	| number {
 		$$ = new_node();
@@ -660,6 +673,11 @@ array_access:
 		add_tchild($$, $2.op, $2.line);
 		add_child($$, $3);
 		add_tchild($$, $4.op, $4.line);
+
+		Symbol *onTable = stack_find($1.op, scopeStack);
+		if(!onTable){
+			printf("Error line %d: variable %s used but not declared\n", $1.line, $1.op);
+		}
 	}
 	| Id '[' expression ',' expression ']'  {
 		$$ = new_node();
@@ -672,6 +690,11 @@ array_access:
 		add_tchild($$, $4.op, $4.line);
 		add_child($$, $5);
 		add_tchild($$, $6.op, $6.line);
+		
+		Symbol *onTable = stack_find($1.op, scopeStack);
+		if(!onTable){
+			printf("Error line %d: variable %s used but not declared\n", $1.line, $1.op);
+		}
 	}
 
 variables_declaration:
@@ -685,6 +708,9 @@ variables_declaration:
 		$$->type = rulesNames[variables_declaration];
 		while(idList.first){
 			Symbol *onTable = find_symbol(idList.first->id, scopeStack->val);
+			if(!onTable && scopeStack->val == 0){
+				onTable = find_symbol(idList.first->id, -1);
+			}
 			if(onTable){
 				printf("Error line %d: variable %s redeclared, first occurrence on line %d\n", $1->line, idList.first->id, onTable->line);
 			}
@@ -754,6 +780,11 @@ expression:
 		add_child($$, $2);
 		add_child($$, $3);
 		$$->type = rulesNames[expression];
+		
+		Symbol *onTable = stack_find($1.op, scopeStack);
+		if(!onTable){
+			printf("Error line %d: variable %s used but not declared\n", $1.line, $1.op);
+		}
 	}
 	| array_access assignment expression {
 		$$ = new_node();

@@ -1,7 +1,7 @@
 %{
 	#include "sintatic.tab.h"
 
-    int lines = 1, errors = 0, pos = 0;
+    int lines = 1, errors = 0, pos = 1;
 %}
 
 %option noyywrap

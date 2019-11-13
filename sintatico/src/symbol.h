@@ -25,6 +25,7 @@ void add_parameter(Symbol*, char*);
 void destroy_symbol();
 void show_symbol();
 Symbol* find_symbol(char*, int);
+Symbol* stack_find(char*, IntStack*);
 int erase_symbol(char*, int);
 
 #endif
