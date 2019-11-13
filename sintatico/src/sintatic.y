@@ -131,9 +131,10 @@ extern int yylex();
     }
 
     IntStack *scopeStack;
+    IntStack *argumentStack;
 
     char funcScope[34];
-
+    DataType lastType;
     Node *root;
 }
 
@@ -303,7 +304,7 @@ parameters:
 		$$->line = $1.line;
 		add_tchild($$, $1.op, $1.line);
 		add_tchild($$, $2.op, $2.line);
-		$$->type = rulesNames[parameters];	
+		$$->type = rulesNames[parameters];
 	}
 
 parameters_list:
@@ -500,9 +501,18 @@ function_call:
 		$$->type = rulesNames[function_call];
 
 		Symbol *onTable = find_symbol($1.op, -1);
+		IntStack *argStack = invert_m1(&argumentStack);
 		if(!onTable){
 			printf("Error line %d: function %s not declared\n", $1.line, $1.op);
 		}
+		else{
+			if(!check_arguments(onTable->parameters, argStack)){
+				printf("Error line %d: function %s used with wrong number of arguments\n", $1.line, $1.op);
+			}
+		}
+		popAllIntStack(argStack);
+
+		lastType = getDtype($1.op);
 	}
 
 arguments:
@@ -512,15 +522,17 @@ arguments:
 		$$->line = $1->line;
 		add_child($$, $1);
 		$$->type = rulesNames[arguments];
+		argumentStack = intStackPush(argumentStack, -1);
 	}
 	| {
 		$$ = new_node();
 		root = $$;
 		$$->type = rulesNames[arguments];
+		argumentStack = intStackPush(argumentStack, -1);
 	}
 
 arguments_list:
-	value ',' arguments_list  {
+	arguments_list ',' value  {
 		$$ = new_node();
 		root = $$;
 		$$->line = $1->line;
@@ -528,6 +540,7 @@ arguments_list:
 		add_tchild($$, $2.op, $2.line);
 		add_child($$, $3);
 		$$->type = rulesNames[arguments_list];
+		argumentStack = intStackPush(argumentStack, lastType);
 	}
 	| value {
 		$$ = new_node();
@@ -535,6 +548,8 @@ arguments_list:
 		$$->line = $1->line;
 		add_child($$, $1);
 		$$->type = rulesNames[arguments_list];
+
+		argumentStack = intStackPush(argumentStack, lastType);
 	}
 
 conditional:
@@ -572,6 +587,7 @@ if:
 		$$->type = rulesNames[ife];
 		scopeStack = intStackPush(scopeStack, $1.pos);
 	}
+
 else:
 	Else {
 		$$ = new_node();
@@ -640,6 +656,8 @@ value:
 		if(!onTable){
 			printf("Error line %d: variable %s used but not declared\n", $1.line, $1.op);
 		}
+
+		lastType = getDtype($1.op);
 	}
 	| number {
 		$$ = new_node();
@@ -678,6 +696,7 @@ array_access:
 		if(!onTable){
 			printf("Error line %d: variable %s used but not declared\n", $1.line, $1.op);
 		}
+		lastType = getDtype($1.op);
 	}
 	| Id '[' expression ',' expression ']'  {
 		$$ = new_node();
@@ -695,6 +714,7 @@ array_access:
 		if(!onTable){
 			printf("Error line %d: variable %s used but not declared\n", $1.line, $1.op);
 		}
+		lastType = getDtype($1.op);
 	}
 
 variables_declaration:
@@ -901,6 +921,7 @@ number:
 		$$->line = $1.line;
 		$$->type = rulesNames[number];
 		add_tchild($$, $1.op, $1.line);
+		lastType = getDtype("int");
 	}
 	| Float {
 		$$ = new_node();
@@ -908,12 +929,14 @@ number:
 		$$->line = $1.line;
 		$$->type = rulesNames[number];
 		add_tchild($$, $1.op, $1.line);
+		lastType = getDtype("float");
 	}
 
 %%
 
 int main (void) {
 	scopeStack = intStackPush(scopeStack, 0);
+	argumentStack = 0;
 	idList.first = idList.last = idList.firstOut = 0;
 	root = 0;
 	yyparse();
@@ -923,4 +946,6 @@ int main (void) {
 	}
 	show_symbol();
 	destroy_symbol();
+	popAllIntStack(argumentStack);
+	popAllIntStack(scopeStack);
 }

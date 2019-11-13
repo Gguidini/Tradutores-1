@@ -12,7 +12,7 @@ struct Symbol {
 	DataType type;
 	char name[34];
 	int line, function, pos, scope;
-	IntList *firstParameter, *lastParameter;
+	IntStack *parameters;
 	Symbol *next;
 };
 
@@ -23,6 +23,7 @@ struct SymbolList {
 void add_symbol(DataType, char*, int, int, int, int);
 void add_parameter(Symbol*, DataType);
 void destroy_symbol();
+int check_arguments(IntStack*, IntStack*);
 void show_symbol();
 Symbol* find_symbol(char*, int);
 Symbol* stack_find(char*, IntStack*);

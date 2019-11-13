@@ -53,7 +53,7 @@ void add_symbol(DataType type, char name[], int line, int pos, int function, int
 	newSymbol->pos = pos;
 	newSymbol->function = function;
 	newSymbol->next = 0;
-	newSymbol->firstParameter = 0;
+	newSymbol->parameters = 0;
 	newSymbol->scope = scope;
 	insert(newSymbol);
 }
@@ -91,16 +91,13 @@ int erase_symbol(char *s, int scope){
 
 void add_parameter(Symbol *function, DataType parameter){
 	if(function == 0) return;
-	IntList *newParameter = (IntList*) malloc(sizeof(StringList));
-	newParameter->next = 0;
-	newParameter->val = parameter;
-	if(function->firstParameter == 0){
-		function->firstParameter = function->lastParameter = newParameter;
-	}
-	else{
-		function->lastParameter->next = newParameter;
-		function->lastParameter = newParameter;
-	}
+	function->parameters = intStackPush(function->parameters, parameter);
+}
+
+void show_parameters(IntStack *parameters){
+	if(parameters == 0 || parameters->val == -1) return;
+	show_parameters(parameters->prev);
+	printf("%s ", dTypeName[parameters->val]);
 }
 
 void show_symbol(){
@@ -112,11 +109,7 @@ void show_symbol(){
 		Symbol *aux = sTable[id->val]->firstSymbol;
 		while(aux){
 			printf("%3d | %4d | %13s | %33s | %11s | %5d |", aux->pos, aux->line, dTypeName[aux->type], aux->name, aux->function ? "Yes" : "No", aux->scope);
-			IntList *parameter = aux->firstParameter;
-			while(parameter){
-				printf("%s ", dTypeName[parameter->val]);
-				parameter = parameter->next;
-			}
+			show_parameters(aux->parameters);
 			printf("\n");
 			aux = aux->next;
 		}
@@ -129,11 +122,7 @@ void destroy_symbol(){
 	while(id){
 		Symbol *aux = sTable[id->val]->firstSymbol;
 		while(aux){
-			while(aux->firstParameter){
-				IntList *parameter = aux->firstParameter->next;
-				myfree((void**)&aux->firstParameter);
-				aux->firstParameter = parameter;
-			}
+			popAllIntStack(aux->parameters);
 			Symbol *aux2 = aux->next;
 			myfree((void**)&aux);
 			aux = aux2;
@@ -154,4 +143,17 @@ Symbol* stack_find(char* name, IntStack *scope_stack){
 		scope_stack = scope_stack->prev;
 	}
 	return 0;
+}
+
+int check_arguments(IntStack *parameters, IntStack *arguments){
+	if(parameters == 0 && arguments == 0){
+		return 1;
+	}
+	if(parameters == 0 || arguments == 0){
+		return 0;
+	}
+	if(parameters->val != arguments->val){
+		printf("Warning: conversion %s to %s\n", dTypeName[parameters->val], dTypeName[arguments->val] );
+	}
+	return check_arguments(parameters->prev, arguments->prev);
 }
