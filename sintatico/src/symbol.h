@@ -9,10 +9,10 @@ typedef struct SymbolList SymbolList;
 #define tableSize 1000003
 
 struct Symbol {
-	char type[20];
+	DataType type;
 	char name[34];
 	int line, function, pos, scope;
-	StringList *firstParameter, *lastParameter;
+	IntList *firstParameter, *lastParameter;
 	Symbol *next;
 };
 
@@ -20,8 +20,8 @@ struct SymbolList {
 	Symbol *firstSymbol, *lastSymbol;
 };
 
-void add_symbol(char*, char*, int, int, int, int);
-void add_parameter(Symbol*, char*);
+void add_symbol(DataType, char*, int, int, int, int);
+void add_parameter(Symbol*, DataType);
 void destroy_symbol();
 void show_symbol();
 Symbol* find_symbol(char*, int);

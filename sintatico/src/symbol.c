@@ -45,9 +45,9 @@ void insert(Symbol *newSymbol){
 	insert_list(newSymbol, id);
 }
 
-void add_symbol(char type[], char name[], int line, int pos, int function, int scope){
+void add_symbol(DataType type, char name[], int line, int pos, int function, int scope){
 	Symbol *newSymbol = (Symbol*) malloc(sizeof(Symbol));
-	strcpy(newSymbol->type, type);
+	newSymbol->type = type;
 	strcpy(newSymbol->name, name);
 	newSymbol->line = line;
 	newSymbol->pos = pos;
@@ -89,12 +89,11 @@ int erase_symbol(char *s, int scope){
 	return 1;
 }
 
-void add_parameter(Symbol *function, char *parameter){
+void add_parameter(Symbol *function, DataType parameter){
 	if(function == 0) return;
-	StringList *newParameter = (StringList*) malloc(sizeof(StringList));
+	IntList *newParameter = (IntList*) malloc(sizeof(StringList));
 	newParameter->next = 0;
-	newParameter->val = (char*) malloc(sizeof(char) * (strlen(parameter) + 1));
-	strcpy(newParameter->val, parameter);
+	newParameter->val = parameter;
 	if(function->firstParameter == 0){
 		function->firstParameter = function->lastParameter = newParameter;
 	}
@@ -112,10 +111,10 @@ void show_symbol(){
 	while(id){
 		Symbol *aux = sTable[id->val]->firstSymbol;
 		while(aux){
-			printf("%3d | %4d | %13s | %33s | %11s | %5d |", aux->pos, aux->line, aux->type, aux->name, aux->function ? "Yes" : "No", aux->scope);
-			StringList *parameter = aux->firstParameter;
+			printf("%3d | %4d | %13s | %33s | %11s | %5d |", aux->pos, aux->line, dTypeName[aux->type], aux->name, aux->function ? "Yes" : "No", aux->scope);
+			IntList *parameter = aux->firstParameter;
 			while(parameter){
-				printf("%s ", parameter->val);
+				printf("%s ", dTypeName[parameter->val]);
 				parameter = parameter->next;
 			}
 			printf("\n");
@@ -131,8 +130,7 @@ void destroy_symbol(){
 		Symbol *aux = sTable[id->val]->firstSymbol;
 		while(aux){
 			while(aux->firstParameter){
-				StringList *parameter = aux->firstParameter->next;
-				myfree((void**)&aux->firstParameter->val);
+				IntList *parameter = aux->firstParameter->next;
 				myfree((void**)&aux->firstParameter);
 				aux->firstParameter = parameter;
 			}

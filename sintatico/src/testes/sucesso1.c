@@ -1,4 +1,4 @@
-int somaTudo(SumArray<int> v[], int n){
+int somaTudo(SumArray<int> v[], float x, int sda[], int n){
 	int onfunc;
 	return v[0, n];
 }

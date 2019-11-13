@@ -267,7 +267,7 @@ function_declaration:
 			printf("Error line %d: function %s redeclared, first occurrence on line %d\n", $1->line, $2.op, onTable->line);
 		}
 		else{
-			add_symbol($1->op, $2.op, $2.line, $2.pos, 1, -1);
+			add_symbol(getDtype($1->op), $2.op, $2.line, $2.pos, 1, -1);
 		}
 
 		$$->type = rulesNames[function_declaration];
@@ -337,8 +337,8 @@ parameter:
 			printf("Error line %d: variable %s redeclared, first occurrence on line %d\n", $1->line, $2.op, onTable->line);
 		}
 		else{
-			add_symbol($1->op, $2.op, $2.line, $2.pos, 0, scopeStack->val);
-			add_parameter(find_symbol(funcScope, -1), $1->op);
+			add_symbol(getDtype($1->op), $2.op, $2.line, $2.pos, 0, scopeStack->val);
+			add_parameter(find_symbol(funcScope, -1), getDtype($1->op));
 		}
 		
 		add_tchild($$, $2.op, $2.line);
@@ -355,8 +355,8 @@ parameter:
 			printf("Error line %d: variable %s redeclared, first occurrence on line %d\n", $1->line, $2.op, onTable->line);
 		}
 		else{
-			add_symbol($1->op, $2.op, $2.line, $2.pos, 0, scopeStack->val);
-			add_parameter(find_symbol(funcScope, scopeStack->val), $1->op);
+			add_symbol(getDtype($1->op), $2.op, $2.line, $2.pos, 0, scopeStack->val);
+			add_parameter(find_symbol(funcScope, -1), getDtype($1->op));
 		}
 
 		add_tchild($$, $2.op, $2.line);
@@ -706,6 +706,7 @@ variables_declaration:
 		add_child($$, $2);
 		add_tchild($$, $3.op, $3.line);
 		$$->type = rulesNames[variables_declaration];
+		DataType dType = getDtype($1->op);
 		while(idList.first){
 			Symbol *onTable = find_symbol(idList.first->id, scopeStack->val);
 			if(!onTable && scopeStack->val == 0){
@@ -715,7 +716,7 @@ variables_declaration:
 				printf("Error line %d: variable %s redeclared, first occurrence on line %d\n", $1->line, idList.first->id, onTable->line);
 			}
 			else{
-				add_symbol($1->op, idList.first->id, $1->line, $2->pos, 0, scopeStack->val);
+				add_symbol(dType, idList.first->id, $1->line, $2->pos, 0, scopeStack->val);
 			}
 			IdItem *aux = idList.first->next;
 			myfree((void**)&idList.first);
