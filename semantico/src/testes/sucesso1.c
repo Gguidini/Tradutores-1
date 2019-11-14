@@ -14,7 +14,7 @@ float n;
 
 int main(){
 	int n, m;int x;
-	int variavelbemgran;
+	int variavelbemgrandeaklsdlansdasdansdkljasndkjsndskjdisksdo;
 	inInt n;
 	n=x+2-1;
 	SumArray<int> v[10];
@@ -34,4 +34,5 @@ int main(){
 		}
 		i += 1;
 	}
+	2+2;
 }

@@ -37,9 +37,11 @@ IntStack* popAllIntStackm1(IntStack *stack){
 	return stack;
 }
 
-char dTypeName[8][20] = {
+char dTypeName[10][20] = {
 	"int"
 	,"float"
+	,"int[]"
+	,"float[]"
 	,"MaxArray<int>"
 	,"MinArray<int>"
 	,"SumArray<int>"

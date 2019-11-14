@@ -45,6 +45,8 @@ typedef enum Rules {
 		,parameters
 		,function_definition
 		,ife
+		,to_int
+		,to_float
 } Rules;
 
 typedef struct Tok Tok;
@@ -59,7 +61,7 @@ typedef struct IdItem IdItem;
 
 struct IdItem {
 	IdItem *next;
-	char *id;
+	Node *id;
 };
 
 struct IdList {
@@ -67,6 +69,9 @@ struct IdList {
 };
 
 extern int yylex();
+
+
+extern int yylex_destroy();
 }
 
 %union {
@@ -78,7 +83,7 @@ extern int yylex();
 
 %code {
 	IdList idList;
-    char rulesNames[32][30] = {
+    char rulesNames[34][30] = {
 				"Ini"
 				,"Program"
 				,"Function_declaration"
@@ -110,9 +115,11 @@ extern int yylex();
 				,"Parameters"
 				,"Function_definition"
 				,"If"
+				,"To Int"
+				,"To Float"
     };
 
-    void addIdItem(char *id){
+    void addIdItem(Node *id){
     	IdItem *newItem = (IdItem*) malloc(sizeof(IdItem));
     	newItem->id = id;
     	newItem->next = 0;
@@ -134,6 +141,41 @@ extern int yylex();
     char funcScope[34];
     DataType lastType;
     Node *root;
+
+    const int intTypes = ((1 <<  dInt) | (1 << dIntArray) | (1 << dMaxArrayI) | (1 << dMinArrayI) | (1 << dSumArrayI));
+    DataType toBasicType(DataType tp){
+    	if((1 << tp) & intTypes){
+    		return dInt;
+    	}
+    	return dFloat;
+    }
+
+    void convertChildrenFloat(Node *pai, Node *f1, Tok op, Node *f2){
+    	DataType t1 = toBasicType(f1->dType);
+    	DataType t2 = toBasicType(f2->dType);
+    	if(t1 < t2){
+			Node *newNode = new_node();
+			newNode->type = rulesNames[to_float];
+			add_child(pai, newNode);
+			add_child(newNode, f1);
+			add_tchild(pai, op.op, op.line);
+			add_child(pai, f2);
+		}
+		else if(t1 > t2){
+			Node *newNode = new_node();
+			newNode->type = rulesNames[to_float];
+			add_child(pai, f1);
+			add_tchild(pai, op.op, op.line);
+			add_child(pai, newNode);
+			add_child(newNode, f2);
+		}
+		else{
+			add_child(pai, f1);
+			add_tchild(pai, op.op, op.line);
+			add_child(pai, f2);
+		}
+		pai->dType = t1 >= t2 ? t1 : t2;
+    }
 }
 
 %token <tok> Integer "integer"
@@ -346,8 +388,8 @@ parameter:
 			sprintf(wError + strlen(wError),"Error line %d: variable %s redeclared, first occurrence on line %d\n", $1->line, $2.op, onTable->line);
 		}
 		else{
-			add_symbol(getDtype($1->op), $2.op, $2.line, $2.pos, 0, scopeStack->val);
-			add_parameter(find_symbol(funcScope, 0), getDtype($1->op));
+			add_symbol(getDtype($1->op) + 2, $2.op, $2.line, $2.pos, 0, scopeStack->val);
+			add_parameter(find_symbol(funcScope, 0), getDtype($1->op) + 2);
 		}
 
 		add_tchild($$, $3.op, $3.line);
@@ -462,13 +504,15 @@ function_call:
 		Symbol *onTable = find_symbol($1.op, 0);
 		if(!onTable){
 			sprintf(wError + strlen(wError),"Error line %d: function %s not declared\n", $1.line, $1.op);
-			lastType = 20;
+			lastType = 0;
+			$$->dType = 0;
 		}
 		else{
 			if(!check_arguments(onTable->parameters, argumentStack, onTable, $1.line)){
 				sprintf(wError + strlen(wError),"Error line %d: function %s used with wrong number of arguments\n", $1.line, $1.op);
 			}
 			lastType = onTable->type;
+			$$->dType = onTable->type;
 		}
 		argumentStack = popAllIntStackm1(argumentStack);
 	}
@@ -574,7 +618,7 @@ loop:
 	}
 
 retrn:
-	Return value ';' {
+	Return expression ';' {
 		$$ = new_node();
 		root = $$;
 		$$->line = $1.line;
@@ -596,22 +640,27 @@ value:
 		if(!onTable){
 			sprintf(wError + strlen(wError),"Error line %d: variable %s used but not declared\n", $1.line, $1.op);
 			lastType = 0;
+			$$->dType = 0;
 		}
 		else{
 			lastType = onTable->type;
+			$$->dType = onTable->type;
 		}
 	}
 	| number {
 		$$ = $1;
 		root = $$;
+		$$->dType = $1->dType;
 	}
 	| array_access {
 		$$ = $1;
 		root = $$;
+		$$->dType = $1->dType;
 	}
 	| function_call {
 		$$ = $1;
 		root = $$;
+		$$->dType = $1->dType;
 	}
 
 array_access:
@@ -629,10 +678,16 @@ array_access:
 		if(!onTable){
 			sprintf(wError + strlen(wError),"Error line %d: variable %s used but not declared\n", $1.line, $1.op);
 			lastType = 0;
+			$$->dType = 0;
 		}
 		else{
+			if(onTable->type <= dFloat){
+				sprintf(wError + strlen(wError),"Error line %d: variable %s is not an array\n", $1.line, $1.op);
+			}
 			lastType = onTable->type;
+			$$->dType = onTable->type;
 		}
+
 	}
 	| Id '[' expression ',' expression ']'  {
 		$$ = new_node();
@@ -650,9 +705,14 @@ array_access:
 		if(!onTable){
 			sprintf(wError + strlen(wError),"Error line %d: variable %s used but not declared\n", $1.line, $1.op);
 			lastType = 0;
+			$$->dType = 0;
 		}
 		else{
+			if(onTable->type <= dFloatArray){
+				sprintf(wError + strlen(wError),"Error line %d: variable %s is not an operation array\n", $1.line, $1.op);
+			}
 			lastType = onTable->type;
+			$$->dType = onTable->type;
 		}
 	}
 
@@ -667,12 +727,12 @@ variables_declaration:
 		$$->type = rulesNames[variables_declaration];
 		DataType dType = getDtype($1->op);
 		while(idList.first){
-			Symbol *onTable = find_symbol(idList.first->id, scopeStack->val);
+			Symbol *onTable = find_symbol(idList.first->id->op, scopeStack->val);
 			if(onTable){
-				sprintf(wError + strlen(wError),"Error line %d: variable %s redeclared, first occurrence on line %d\n", $1->line, idList.first->id, onTable->line);
+				sprintf(wError + strlen(wError),"Error line %d: variable %s redeclared, first occurrence on line %d\n", $1->line, idList.first->id->op, onTable->line);
 			}
 			else{
-				add_symbol(dType, idList.first->id, $1->line, $2->pos, 0, scopeStack->val);
+				add_symbol(dType + idList.first->id->dType, idList.first->id->op, $1->line, $2->pos, 0, scopeStack->val);
 			}
 			IdItem *aux = idList.first->next;
 			myfree((void**)&idList.first);
@@ -686,17 +746,17 @@ identifiers_list:
 		root = $$;
 		$$->line = $1.line;
 		free($2.op);
-		add_tchild($$, $1.op, $1.line);
 		add_child($$, $3);
 		$$->type = (void*)-1;
 		$$->pos = $1.pos;
-		addIdItem($1.op);
+		$$->dType = 0;
+		$$->op = $1.op;
+		addIdItem($$);
 	}
 	| Id '[' Integer ']' ',' identifiers_list {
 		$$ = new_node();
 		root = $$;
 		$$->line = $1.line;
-		add_tchild($$, $1.op, $1.line);
 		add_tchild($$, $2.op, $2.line);
 		add_tchild($$, $3.op, $3.line);
 		add_tchild($$, $4.op, $4.line);
@@ -704,28 +764,32 @@ identifiers_list:
 		add_child($$, $6);
 		$$->type = (void*)-1;
 		$$->pos = $1.pos;
-		addIdItem($1.op);
+		$$->dType = 2;
+		$$->op = $1.op;
+		addIdItem($$);
 	}
 	| Id '[' Integer ']' {
 		$$ = new_node();
 		root = $$;
 		$$->line = $1.line;
 		$$->type = (void*)-1;
-		add_tchild($$, $1.op, $1.line);
 		add_tchild($$, $2.op, $2.line);
 		add_tchild($$, $3.op, $3.line);
 		add_tchild($$, $4.op, $4.line);
 		$$->pos = $1.pos;
-		addIdItem($1.op);
+		$$->dType = 2;
+		$$->op = $1.op;
+		addIdItem($$);
 	}
 	| Id {
 		$$ = new_node();
 		root = $$;
 		$$->line = $1.line;
 		$$->type = (void*)-1;
-		add_tchild($$, $1.op, $1.line);
 		$$->pos = $1.pos;
-		addIdItem($1.op);
+		$$->dType = 0;
+		$$->op = $1.op;
+		addIdItem($$);
 	}
 
 expression: 
@@ -733,14 +797,25 @@ expression:
 		$$ = new_node();
 		root = $$;
 		$$->line = $1.line;
+		$$->type = rulesNames[expression];
 		add_tchild($$, $1.op, $1.line);
 		add_child($$, $2);
-		add_child($$, $3);
-		$$->type = rulesNames[expression];
 		
 		Symbol *onTable = stack_find($1.op, scopeStack);
 		if(!onTable){
 			sprintf(wError + strlen(wError),"Error line %d: variable %s used but not declared\n", $1.line, $1.op);
+			add_child($$, $3);
+		}
+		else{
+			if(toBasicType(onTable->type) != toBasicType($3->dType)){
+				Node *newNode = new_node();
+				newNode->type = rulesNames[toBasicType(onTable->type) == dInt ? to_int : to_float];
+				add_child($$, newNode);
+				add_child(newNode, $3);
+			}
+			else{
+				add_child($$, $3);
+			}
 		}
 	}
 	| array_access assignment expression {
@@ -749,13 +824,23 @@ expression:
 		$$->line = $1->line;
 		add_child($$, $1);
 		add_child($$, $2);
-		add_child($$, $3);
+		if(toBasicType($1->dType) != toBasicType($3->dType)){
+			Node *newNode = new_node();
+			newNode->type = rulesNames[toBasicType($1->dType) == dInt ? to_int : to_float];
+			add_child($$, newNode);
+			add_child(newNode, $3);
+		}
+		else{
+			add_child($$, $3);
+		}
 		$$->type = rulesNames[expression];
 	}
 	| expression_1 {
 		$$ = $1;
 		root = $$;
-		$$->type = rulesNames[expression];
+		if($$->type == 0){
+			$$->type = rulesNames[expression];
+		}
 	}
 
 expression_1:
@@ -763,9 +848,7 @@ expression_1:
 		$$ = new_node();
 		root = $$;
 		$$->line = $1->line;
-		add_child($$, $1);
-		add_tchild($$, $2.op, $2.line);
-		add_child($$, $3);
+		convertChildrenFloat($$, $1, $2, $3);
 		$$->type = (void*)-1;
 	}
 	| expression_2 {
@@ -778,9 +861,7 @@ expression_2:
 		$$ = new_node();
 		root = $$;
 		$$->line = $1->line;
-		add_child($$, $1);
-		add_tchild($$, $2.op, $2.line);
-		add_child($$, $3);
+		convertChildrenFloat($$, $1, $2, $3);
 		$$->type = (void*)-1;
 	}
 	| expression_3 {
@@ -793,9 +874,7 @@ expression_3:
 		$$ = new_node();
 		root = $$;
 		$$->line = $1->line;
-		add_child($$, $1);
-		add_tchild($$, $2.op, $2.line);
-		add_child($$, $3);
+		convertChildrenFloat($$, $1, $2, $3);
 		$$->type = (void*)-1;		
 	}
 	| UOp value {
@@ -805,6 +884,7 @@ expression_3:
 		add_tchild($$, $1.op, $1.line);
 		add_child($$, $2);
 		$$->type = (void*)-1;
+		$$->dType = $2->dType;
 	}
 	| UOp '(' expression ')' {
 		$$ = new_node();
@@ -815,10 +895,12 @@ expression_3:
 		add_child($$, $3);	
 		free($4.op);
 		$$->type = (void*)-1;
+		$$->dType = $3->dType;
 	}
 	| value {
 		$$ = $1;
 		root = $$;
+		$$->dType = $1->dType;
 	}
 	| '(' expression ')' {
 		$$ = $2;
@@ -826,6 +908,7 @@ expression_3:
 		$$->type = (void*)-1;
 		free($1.op);
 		free($3.op);
+		$$->dType = $2->dType;
 	}
 
 assignment:
@@ -845,6 +928,7 @@ number:
 		$$->type = rulesNames[number];
 		$$->op = $1.op;
 		lastType = getDtype("int");
+		$$->dType = dInt;
 	}
 	| Float {
 		$$ = new_node();
@@ -853,6 +937,7 @@ number:
 		$$->type = rulesNames[number];
 		$$->op = $1.op;
 		lastType = getDtype("float");
+		$$->dType = dFloat;
 	}
 
 %%
@@ -863,6 +948,7 @@ int main (void) {
 	idList.first = idList.last = idList.firstOut = 0;
 	root = 0;
 	yyparse();
+	yylex_destroy();
 	if(root){
 		show_tree(root, 1);
 		destroy_tree(root);

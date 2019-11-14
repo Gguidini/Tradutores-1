@@ -1,6 +1,8 @@
 #ifndef TREE
 #define TREE
 
+#include "misc.h"
+
 typedef struct Node Node;
 typedef struct NodeList NodeList;
 
@@ -15,6 +17,7 @@ struct Node {
 	char* type;
 	char* op;
 	int line, pos;
+	DataType dType;
 };
 
 Node* new_node();
