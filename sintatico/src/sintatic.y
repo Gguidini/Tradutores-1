@@ -45,7 +45,6 @@ typedef enum Rules {
 		,parameters
 		,function_definition
 		,ife
-		,elsee
 } Rules;
 
 typedef struct Tok Tok;
@@ -111,7 +110,6 @@ extern int yylex();
 				,"Parameters"
 				,"Function_definition"
 				,"If"
-				,"Else"
     };
 
     void addIdItem(char *id){
@@ -195,7 +193,6 @@ extern int yylex();
 %type <node> parameters
 %type <node> function_definition
 %type <node> if
-%type <node> else
 
 %start ini
 
@@ -487,14 +484,14 @@ write:
 	}
 
 function_call:
-	Id '(' arguments ')'  {
+	Id { argumentStack = intStackPush(argumentStack, -1); } '(' arguments ')'  {
 		$$ = new_node();
 		root = $$;
 		$$->line = $1.line;
 		add_tchild($$, $1.op, $1.line);
-		add_tchild($$, $2.op, $2.line);
-		add_child($$, $3);
-		add_tchild($$, $4.op, $4.line);
+		add_tchild($$, $3.op, $3.line);
+		add_child($$, $4);
+		add_tchild($$, $5.op, $5.line);
 		$$->type = rulesNames[function_call];
 
 		Symbol *onTable = find_symbol($1.op, 0);
@@ -508,8 +505,7 @@ function_call:
 			}
 			lastType = onTable->type;
 		}
-		popAllIntStack(argumentStack);
-		argumentStack = 0;
+		argumentStack = popAllIntStackm1(argumentStack);
 	}
 
 arguments:
@@ -583,33 +579,23 @@ if:
 		scopeStack = intStackPush(scopeStack, $1.pos);
 	}
 
-else:
-	Else {
+else_if:
+	Else { scopeStack = intStackPush(scopeStack, $1.pos); } conditional {
 		$$ = new_node();
 		root = $$;
 		$$->line = $1.line;
 		add_tchild($$, $1.op, $1.line);
-		$$->type = rulesNames[elsee];
-		scopeStack = intStackPush(scopeStack, $1.pos);
-	}
-
-else_if:
-	else conditional {
-		$$ = new_node();
-		root = $$;
-		$$->line = $1->line;
-		add_child($$, $1);
-		add_child($$, $2);
+		add_child($$, $3);
 		$$->type = rulesNames[else_if];
 	}
-	| else '{' statments '}' {
+	| Else { scopeStack = intStackPush(scopeStack, $1.pos); } '{' statments '}' {
 		$$ = new_node();
 		root = $$;
-		$$->line = $1->line;
-		add_child($$, $1);
-		add_tchild($$, $2.op, $2.line);
-		add_child($$, $3);
-		add_tchild($$, $4.op, $4.line);
+		$$->line = $1.line;
+		add_tchild($$, $1.op, $1.line);
+		add_tchild($$, $3.op, $3.line);
+		add_child($$, $4);
+		add_tchild($$, $5.op, $5.line);
 		$$->type = rulesNames[else_if];
 	}
 

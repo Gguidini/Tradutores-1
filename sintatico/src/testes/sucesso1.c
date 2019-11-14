@@ -19,7 +19,7 @@ int main(){
 	n=x+2-1;
 	SumArray<int> v[10];
 	int a[10];
-	somaTudo(v, 1.0, a, 24);
+	somaTudo(v, vi(), a, 24);
 	int i;
 	i=0;
 	while(i < 10){
