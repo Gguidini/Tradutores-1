@@ -82,5 +82,5 @@ void destroy_tree(Node *root) {
 }
 
 void yyerror (char const *s) {
-	fprintf (stderr, "%s\n", s);
+	sprintf(wError, "%s\n", s);
 }
