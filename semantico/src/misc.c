@@ -4,6 +4,9 @@
 #include "misc.h"
 
 void myfree(void** p){
+	if(p == 0 ||*p == 0){
+		return;	
+	} 
 	free(*p);
 	*p = 0;
 }

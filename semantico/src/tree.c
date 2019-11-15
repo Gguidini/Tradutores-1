@@ -27,12 +27,13 @@ void add_child(Node *no, Node *child) {
 	}
 }
 
-void add_tchild(Node *no, char *op, int line){
+Node* add_tchild(Node *no, char *op, int line){
 	Node *newNode = new_node();
 	newNode->type = 0;
 	newNode->line = line;
 	newNode->op = op;
 	add_child(no, newNode);
+	return newNode;
 }
 
 void show_tree(Node *root, int tabs) {
@@ -66,6 +67,7 @@ void show_tree(Node *root, int tabs) {
 }
 
 void destroy_tree(Node *root) {
+	if(!root) return;
 	NodeList *child = root->firstChild;
 	while(child){
 		destroy_tree(child->val);
