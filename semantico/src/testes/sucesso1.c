@@ -23,16 +23,22 @@ int main(){
 	int i;
 	i=0;
 	while(i < 10){
+		int vvb;
 		if(i == 2){
+			int c;
 			x += x < 0-10 + x > 10 + x * 4;
 		}
 		else if(x < 2 * 3){
 			x = 2 * x * 2;
+			int e1;
 		}
 		else{
+			int e2;
 			i += 5;
 		}
+		int a;
 		i += 1;
 	}
+	int d, z;
 	2+2;
 }

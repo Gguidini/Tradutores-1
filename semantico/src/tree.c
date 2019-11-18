@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "tree.h"
 #include "misc.h"
 
@@ -82,5 +83,5 @@ void destroy_tree(Node *root) {
 }
 
 void yyerror (char const *s) {
-	sprintf(wError, "%s\n", s);
+	sprintf(wError + strlen(wError), "%s\n", s);
 }

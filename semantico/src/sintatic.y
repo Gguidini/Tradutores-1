@@ -552,7 +552,7 @@ arguments_list:
 	}
 
 conditional:
-	if '{' statments '}' else_if {
+	if '{' statments '}' { scopeStack = intStackPop(scopeStack); } else_if {
 		$$ = new_node();
 		root = $$;
 		$$->line = $1->line;
@@ -560,7 +560,7 @@ conditional:
 		myfree((void**)&$2.op);
 		add_child($$, $3);
 		myfree((void**)&$4.op);
-		add_child($$, $5);
+		add_child($$, $6);
 		$$->type = rulesNames[conditional];
 	}
 	| if '{' statments '}' {
@@ -572,6 +572,7 @@ conditional:
 		add_child($$, $3);
 		myfree((void**)&$4.op);
 		$$->type = rulesNames[conditional];
+		scopeStack = intStackPop(scopeStack);
 	}
 
 if:
@@ -605,21 +606,23 @@ else_if:
 		add_child($$, $4);
 		myfree((void**)&$5.op);
 		$$->type = rulesNames[else_if];
+		scopeStack = intStackPop(scopeStack);
 	}
 
 loop:
-	While '(' expression ')' '{' statments '}' {
+	While { scopeStack = intStackPush(scopeStack, $1.pos); } '(' expression ')' '{' statments '}' {
 		$$ = new_node();
 		root = $$;
 		$$->line = $1.line;
 		$$->op = $1.op;
-		myfree((void**)&$2.op);
-		add_child($$, $3);
-		myfree((void**)&$4.op);
+		myfree((void**)&$3.op);
+		add_child($$, $4);
 		myfree((void**)&$5.op);
-		add_child($$, $6);
-		myfree((void**)&$7.op);
+		myfree((void**)&$6.op);
+		add_child($$, $7);
+		myfree((void**)&$8.op);
 		$$->type = rulesNames[loop];
+		scopeStack = intStackPop(scopeStack);
 	}
 
 retrn:
@@ -628,7 +631,7 @@ retrn:
 		root = $$;
 		$$->line = $1.line;
 		add_tchild($$, $1.op, $1.line);
-		if($2->dType != funcType){
+		if($2->dType != toBasicType(funcType)){
 			Node *newNode = new_node();
 			newNode->type = rulesNames[toBasicType(funcType) == dInt ? to_int : to_float];
 			add_child($$, newNode);
@@ -695,13 +698,12 @@ array_access:
 			$$->dType = 0;
 		}
 		else{
-			if(onTable->type <= dFloat){
+			if(onTable->type <= dFloat || onTable->type > dFloatArray){
 				sprintf(wError + strlen(wError),"Error line %d: variable %s is not an array\n", $1.line, $1.op);
 			}
 			lastType = onTable->type;
-			$$->dType = onTable->type;
+			$$->dType = toBasicType(onTable->type);
 		}
-
 	}
 	| Id '[' expression ',' expression ']'  {
 		$$ = new_node();
@@ -726,7 +728,7 @@ array_access:
 				sprintf(wError + strlen(wError),"Error line %d: variable %s is not an operation array\n", $1.line, $1.op);
 			}
 			lastType = onTable->type;
-			$$->dType = onTable->type;
+			$$->dType = toBasicType(onTable->type);
 		}
 	}
 
