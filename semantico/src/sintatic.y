@@ -464,11 +464,12 @@ statments:
 		add_child($$, $2);
 		$$->type = (void*)-1;
 	}
-	| '{' statments '}' {
-		$$ = $2;
+	| '{' { scopeStack = intStackPush(scopeStack, $1.pos); } statments '}' {
+		$$ = $3;
 		root = $$;
 		myfree((void**)&$1.op);
-		myfree((void**)&$3.op);
+		myfree((void**)&$4.op);
+		scopeStack = intStackPop(scopeStack);
 	}
 	| statment {
 		$$ = $1;
