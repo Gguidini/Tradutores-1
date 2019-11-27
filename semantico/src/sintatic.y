@@ -143,6 +143,7 @@ extern int yylex_destroy();
     int needSize = 0;
     DataType funcType = 0;
     Node *root;
+    int hasturn;
 
     const int intTypes = ((1 <<  dInt) | (1 << dIntArray) | (1 << dMaxArrayI) | (1 << dMinArrayI) | (1 << dSumArrayI));
     DataType toBasicType(DataType tp){
@@ -155,6 +156,10 @@ extern int yylex_destroy();
     void convertChildrenFloat(Node *pai, Node *f1, Tok op, Node *f2){
     	DataType t1 = toBasicType(f1->dType);
     	DataType t2 = toBasicType(f2->dType);
+    	if(t1 != f1->dType || t2 != f2->dType){
+			sprintf(wError + strlen(wError),"Error line %d: no conversion between %s and %s exists\n", pai->line, dTypeName[f1->dType], dTypeName[f2->dType]);
+			return;
+    	}
     	if(t1 < t2){
 			Node *newNode = new_node();
 			newNode->type = rulesNames[to_float];
@@ -178,6 +183,29 @@ extern int yylex_destroy();
 		}
 		pai->dType = t1 >= t2 ? t1 : t2;
     }
+
+    int check_arguments(IntStack *parameters, IntStack *arguments, Symbol *func, int line){
+		if(parameters == 0 && (arguments == 0 || arguments->val == -1)){
+			return 1;
+		}
+		if(parameters == 0 || arguments == 0 || arguments->val == -1){
+			return 0;
+		}
+		if(parameters->val != arguments->val){
+			if(toBasicType(arguments->val) != arguments->val || toBasicType(parameters->val) != parameters->val){
+				sprintf(wError + strlen(wError),"Error line %d: no conversion between %s and %s exists\n", line, dTypeName[arguments->val], dTypeName[parameters->val]);
+			}
+			else{
+				sprintf(wError + strlen(wError),"Warning line %d: not converting %s to %s on call to %s\n", line, dTypeName[arguments->val], dTypeName[parameters->val], func->name );
+			}
+		}
+		return check_arguments(parameters->prev, arguments->prev, func, line);
+	}
+
+
+	void yyerror (char const *s) {
+		sprintf(wError + strlen(wError), "Error line %d: %s\n", root != 0 ? root->line : 1, s);
+	}
 }
 
 %token <tok> Integer "integer"
@@ -313,6 +341,7 @@ function_declaration:
 
 		scopeStack = intStackPush(scopeStack, $2.pos);
 		strcpy(funcScope, $2.op);
+		hasturn = 0;
 	}
 
 function_body:
@@ -324,6 +353,10 @@ function_body:
 		myfree((void**)&$1.op);
 		myfree((void**)&$3.op);
 		$$->type = rulesNames[function_body];
+
+		if(hasturn != 0){
+
+		}
 	}
 
 parameters:
@@ -631,18 +664,25 @@ retrn:
 		root = $$;
 		$$->line = $1.line;
 		add_tchild($$, $1.op, $1.line);
-		if($2->dType != toBasicType(funcType)){
-			Node *newNode = new_node();
-			newNode->type = rulesNames[toBasicType(funcType) == dInt ? to_int : to_float];
-			add_child($$, newNode);
-			add_child(newNode, $2);
-			$$->dType = toBasicType(funcType);
+		if($2->dType != funcType){
+			if(toBasicType(funcType) != funcType || $2->dType != toBasicType($2->dType)){
+				sprintf(wError + strlen(wError),"Error line %d: no conversion between %s and %s exists\n", $1.line, dTypeName[$2->dType], dTypeName[funcType]);
+			}
+			else{
+				Node *newNode = new_node();
+				newNode->type = rulesNames[toBasicType(funcType) == dInt ? to_int : to_float];
+				add_child($$, newNode);
+				add_child(newNode, $2);
+				$$->dType = toBasicType(funcType);
+			}
 		}
 		else{
 			add_child($$, $2);
 		}
 		myfree((void**)&$3.op);
 		$$->type = rulesNames[retrn];
+
+		hasturn |= find_symbol(funcScope, 0)->scope == scopeStack->val;
 	}
 
 value:

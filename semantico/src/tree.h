@@ -30,6 +30,4 @@ void show_tree(Node*, int);
 
 void destroy_tree(Node*);
 
-void yyerror (char const *);
-
 #endif

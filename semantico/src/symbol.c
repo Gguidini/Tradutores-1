@@ -144,16 +144,3 @@ Symbol* stack_find(char* name, IntStack *scope_stack){
 	}
 	return 0;
 }
-
-int check_arguments(IntStack *parameters, IntStack *arguments, Symbol *func, int line){
-	if(parameters == 0 && (arguments == 0 || arguments->val == -1)){
-		return 1;
-	}
-	if(parameters == 0 || arguments == 0 || arguments->val == -1){
-		return 0;
-	}
-	if(parameters->val != arguments->val){
-		sprintf(wError + strlen(wError),"Warning line %d: conversion %s to %s on call to %s\n", line, dTypeName[arguments->val], dTypeName[parameters->val], func->name );
-	}
-	return check_arguments(parameters->prev, arguments->prev, func, line);
-}

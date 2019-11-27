@@ -81,7 +81,3 @@ void destroy_tree(Node *root) {
 	}
 	myfree((void**)&root);
 }
-
-void yyerror (char const *s) {
-	sprintf(wError + strlen(wError), "%s\n", s);
-}

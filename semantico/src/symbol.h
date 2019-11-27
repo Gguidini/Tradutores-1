@@ -23,7 +23,6 @@ struct SymbolList {
 void add_symbol(DataType, char*, int, int, int, int);
 void add_parameter(Symbol*, DataType);
 void destroy_symbol();
-int check_arguments(IntStack*, IntStack*, Symbol*, int);
 void show_symbol();
 Symbol* find_symbol(char*, int);
 Symbol* stack_find(char*, IntStack*);

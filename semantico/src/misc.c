@@ -60,6 +60,12 @@ DataType getDtype(char *s){
 	else if(strcmp(s, "float") == 0){
 		return dFloat;
 	}
+	else if(strcmp(s, "int[]") == 0){
+		return dIntArray;
+	}
+	else if(strcmp(s, "float[]") == 0){
+		return dFloatArray;
+	}
 	else if(strcmp(s, "MaxArray<int>") == 0){
 		return dMaxArrayI;
 	}

@@ -124,7 +124,7 @@ int lines = 0, errors = 0;
 
 {ID} {
     if(yyleng >= 33) {
-        sprintf(wError + strlen(wError),"Warning! Line %d. The idenfier %s is too long, it was truncated to the first 33 characters\n", lines, yytext);
+        sprintf(wError + strlen(wError),"Warning line %d: the idenfier %s is too long, it was truncated to the first 33 characters\n", lines, yytext);
         yytext[33] = 0;
     }
     yylval->tok.op = (char*) malloc(sizeof(char) * (1 + strlen(yytext)));
@@ -248,12 +248,12 @@ int lines = 0, errors = 0;
 
 . {
     errors++;
-    sprintf(wError + strlen(wError),"ERROR! line %d! Unrecognized character: %s\n", lines, yytext);
+    sprintf(wError + strlen(wError),"Error line %d: Unrecognized character: %s\n", lines, yytext);
 }
 
 {DIGIT}+[^+*<>=~&|/^\n\t ;,)\]-]+ {
     errors++;
-    sprintf(wError + strlen(wError),"ERROR! line %d! Unrecognized token: %s\n", lines, yytext);
+    sprintf(wError + strlen(wError),"Error line %d: Unrecognized token: %s\n", lines, yytext);
 }
 
 %%
