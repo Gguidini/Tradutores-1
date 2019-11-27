@@ -319,6 +319,34 @@ function_definition:
 
 		scopeStack = intStackPop(scopeStack);
 	}
+	| error parameters function_body {
+		$$ = new_node();
+		root = $$;
+		$$->line = $2->line;
+
+		add_child($$, $2);
+		add_child($$, $3);
+
+		$$->type = rulesNames[function_definition];
+
+		scopeStack = intStackPop(scopeStack);
+
+		sprintf(wError + strlen(wError),"Error line %d: sintatic error on function declaration\n", $2->line);
+	}
+	| function_declaration error function_body {
+		$$ = new_node();
+		root = $$;
+		$$->line = $1->line;
+
+		add_child($$, $1);
+		add_child($$, $3);
+
+		$$->type = rulesNames[function_definition];
+
+		scopeStack = intStackPop(scopeStack);
+
+		sprintf(wError + strlen(wError),"Error line %d: sintatic error on function %s parameters\n", $1->line, $1->op);
+	}
 
 function_declaration:
 	type_identifier Id {
@@ -504,6 +532,10 @@ statment:
 	}
 	| write {
 		$$ = $1;
+		root = $$;
+	}
+	| error {
+		$$ = new_node();
 		root = $$;
 	}
 
@@ -795,6 +827,22 @@ variables_declaration:
 			myfree((void**)&idList.first);
 			idList.first = aux;
 		}
+	}
+	| type_identifier error ';' {
+		$$ = new_node();
+		root = $$;
+		$$->line = $1->line;
+		add_child($$, $1);
+		myfree((void**)&$3.op);
+		sprintf(wError + strlen(wError),"Error line %d: sintatic error on variables declaration\n", $1->line);
+	}
+	| error identifiers_list ';' {
+		$$ = new_node();
+		root = $$;
+		$$->line = $2->line;
+		add_child($$, $2);
+		myfree((void**)&$3.op);
+		sprintf(wError + strlen(wError),"Error line %d: sintatic error on variables declaration\n", $2->line);
 	}
 
 identifiers_list:
