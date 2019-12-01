@@ -1,0 +1,8 @@
+Sistema utilizado:
+gcc (Ubuntu 7.4.0-1ubuntu1~18.04.1) 7.4.0
+
+Executar analisador semântico
+Execute os comandos:
+make
+./sintatic < {arquivo com código para analise}
+

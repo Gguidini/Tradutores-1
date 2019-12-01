@@ -1,0 +1,7 @@
+Sistema utilizado:
+ubuntu 18.04 LTS
+
+Executar analisador sintático
+Na pasta src execute os comandos:
+make
+./sintatic < {arquivo com código para analise}

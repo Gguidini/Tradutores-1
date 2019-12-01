@@ -93,7 +93,7 @@ extern int yylex_destroy();
     int needSize = 0;
     DataType funcType = 0;
     Node *root;
-    int hasturn;
+    int hasturn, paramNum;
 
 	IdList idList;
     char rulesNames[34][30] = {
@@ -161,6 +161,9 @@ extern int yylex_destroy();
     	DataType t2 = toBasicType(f2->dType);
     	if(t1 != f1->dType || t2 != f2->dType){
 			sprintf(wError + strlen(wError),"Error line %d: no conversion between %s and %s exists\n", pai->line, dTypeName[f1->dType], dTypeName[f2->dType]);
+			add_child(pai, f1);
+			add_tchild(pai, op.op, op.line);
+			add_child(pai, f2);
 			return;
     	}
     	if(t1 < t2){
@@ -322,19 +325,29 @@ function_definition:
 
 		scopeStack = intStackPop(scopeStack);
 	}
-	| error parameters function_body {
+	| error {
+		scopeStack = intStackPush(scopeStack, -2);
+		funcScope[0] = 0;
+		hasturn = 0;
+		paramNum = 0;
+		
+		popAllIntStack(&tempStack);
+		for(int i = 1023; i >= 0; i--){
+			tempStack = intStackPush(tempStack, i);
+		}
+	} parameters function_body {
 		$$ = new_node();
 		root = $$;
-		$$->line = $2->line;
+		$$->line = $3->line;
 
-		add_child($$, $2);
 		add_child($$, $3);
+		add_child($$, $4);
 
 		$$->type = rulesNames[function_definition];
 
 		scopeStack = intStackPop(scopeStack);
 
-		sprintf(wError + strlen(wError),"Error line %d: sintatic error on function declaration\n", $2->line);
+		sprintf(wError + strlen(wError),"Error line %d: sintatic error on function declaration\n", $3->line);
 	}
 	| function_declaration error function_body {
 		$$ = new_node();
@@ -364,17 +377,22 @@ function_declaration:
 			sprintf(wError + strlen(wError),"Error line %d: function %s redeclared, first occurrence on line %d\n", $1->line, $2.op, onTable->line);
 		}
 		else{
-			add_symbol(getDtype($1->op), $2.op, $2.line, $2.pos, 1, 0);
+			add_symbol(getDtype($1->op), $2.op, $2.line, $2.pos, 1, 0, 0);
 			funcType = getDtype($1->op);
 		}
 		fprintf(tac, "%s:\n", $2.op);
-		printf("ASKDAKSD\n");
 
 		$$->type = rulesNames[function_declaration];
 
 		scopeStack = intStackPush(scopeStack, $2.pos);
 		strcpy(funcScope, $2.op);
 		hasturn = 0;
+		paramNum = 0;
+		
+		popAllIntStack(&tempStack);
+		for(int i = 1023; i >= 0; i--){
+			tempStack = intStackPush(tempStack, i);
+		}
 	}
 
 function_body:
@@ -440,9 +458,12 @@ parameter:
 			sprintf(wError + strlen(wError),"Error line %d: variable %s redeclared, first occurrence on line %d\n", $1->line, $2.op, onTable->line);
 		}
 		else{
-			add_symbol(getDtype($1->op), $2.op, $2.line, $2.pos, 0, scopeStack->val);
+			add_symbol(getDtype($1->op), $2.op, $2.line, $2.pos, 0, scopeStack->val, tempStack->val);
+			fprintf(tac, "mov $%d, #%d\n", tempStack->val, paramNum);
+			tempStack = intStackPop(tempStack);
 			add_parameter(find_symbol(funcScope, 0), getDtype($1->op));
 		}
+		paramNum++;
 	}
 	| type_identifier Id '[' ']' {
 		$$ = new_node();
@@ -457,12 +478,15 @@ parameter:
 			sprintf(wError + strlen(wError),"Error line %d: variable %s redeclared, first occurrence on line %d\n", $1->line, $2.op, onTable->line);
 		}
 		else{
-			add_symbol(getDtype($1->op) + (getDtype($1->op) <= dFloatArray) * 2, $2.op, $2.line, $2.pos, 0, scopeStack->val);
+			add_symbol(getDtype($1->op) + (getDtype($1->op) <= dFloatArray) * 2, $2.op, $2.line, $2.pos, 0, scopeStack->val, tempStack->val);
+			tempStack = intStackPop(tempStack);
+			fprintf(tac, "mov $%d, #%d\n", tempStack->val, paramNum);
 			add_parameter(find_symbol(funcScope, 0), getDtype($1->op) + (getDtype($1->op) <= dFloatArray) * 2);
 		}
-
 		add_tchild($$, $3.op, $3.line);
 		add_tchild($$, $4.op, $4.line);
+
+		paramNum++;
 	}
 
 type_identifier:
@@ -705,6 +729,7 @@ retrn:
 		if($2->dType != funcType){
 			if(toBasicType(funcType) != funcType || $2->dType != toBasicType($2->dType)){
 				sprintf(wError + strlen(wError),"Error line %d: no conversion between %s and %s exists\n", $1.line, dTypeName[$2->dType], dTypeName[funcType]);
+				add_child($$, $2);
 			}
 			else{
 				Node *newNode = new_node();
@@ -826,7 +851,10 @@ variables_declaration:
 				sprintf(wError + strlen(wError),"Error line %d: variable %s redeclared, first occurrence on line %d\n", $1->line, idList.first->id->op, onTable->line);
 			}
 			else{
-				add_symbol(dType + (dType <= dFloatArray) *  idList.first->id->dType, idList.first->id->op, $1->line, $2->pos, 0, scopeStack->val);
+				add_symbol(dType + (dType <= dFloatArray) *  idList.first->id->dType, idList.first->id->op, $1->line, $2->pos, 0, scopeStack->val, scopeStack->val != 0 ? tempStack->val : -1);
+				if(scopeStack->val != 0){
+					tempStack = intStackPop(tempStack);
+				}
 			}
 			IdItem *aux = idList.first->next;
 			myfree((void**)&idList.first);
@@ -1065,13 +1093,12 @@ number:
 
 int main (void) {
 	tac = fopen("code.tac", "w+");
-	for(int i = 1023; i >= 0; i--){
-		tempStack = intStackPush(tempStack, i);
-	}
+	tempStack = 0;
 	scopeStack = intStackPush(scopeStack, 0);
 	argumentStack = 0;
 	idList.first = idList.last = idList.firstOut = 0;
 	root = 0;
+
 	yyparse();
 	yylex_destroy();
 	if(root){
@@ -1081,8 +1108,9 @@ int main (void) {
 	
 	destroy_tree(root);
 	destroy_symbol();
-	popAllIntStack(argumentStack);
-	popAllIntStack(scopeStack);
+	popAllIntStack(&tempStack);
+	popAllIntStack(&argumentStack);
+	popAllIntStack(&scopeStack);
 
 	printf("\n");
 	printf("%s\n",wError );
