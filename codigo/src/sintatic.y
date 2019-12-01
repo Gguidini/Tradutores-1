@@ -1086,7 +1086,6 @@ expression:
 
 		if($1->dType != $3->dType){
 			if(toBasicType($1->dType) != $1->dType || toBasicType($3->dType) != $3->dType){
-				printf("%d\n", $3->dType);
 				sprintf(wError + strlen(wError),"Error line %d: no conversion from %s to %s exists\n", $1->line, dTypeName[$3->dType], dTypeName[$1->dType]);
 				add_child($$, $3);
 			}
@@ -1178,7 +1177,6 @@ expression_2:
 				fprintf(tac, "band $%d, $%d, $%d\n", $$->temp, $1->temp, $3->temp);
 				break;
 		}
-		printf("%s %s %s\n",$1->op, $2.op, $3->op);
 		tempStack = intStackPush(tempStack, $1->temp);
 		tempStack = intStackPush(tempStack, $3->temp);
 	}
