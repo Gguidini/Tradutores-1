@@ -561,10 +561,6 @@ statment:
 		$$ = $1;
 		root = $$;
 	}
-	| error {
-		$$ = new_node();
-		root = $$;
-	}
 
 read:
 	Read Id ';' {
@@ -584,10 +580,34 @@ write:
 		$$->line = $1.line;
 		$$->type = rulesNames[writi];
 		$$->op = $2.op;
-		myfree((void**)&$1.op);
 		myfree((void**)&$3.op);
 
-
+		Symbol *onTable = stack_find($2.op, scopeStack);
+		if(!onTable){
+			sprintf(wError + strlen(wError),"Error line %d: variable %s used but not declared\n", $1.line, $1.op);
+		}
+		else{
+			if(onTable->type != toBasicType(onTable->type)){
+				sprintf(wError + strlen(wError),"Error line %d: no conversion between %s and %s exists\n", $1.line, dTypeName[onTable->type], $1.op[3] == 'I' ? "int" : "float");
+			}
+			else if($1.op[3] == 'I' && onTable->type != dInt){
+				Node *newNode = new_node();
+				newNode->type = rulesNames[to_int];
+				add_child($$, newNode);
+				add_tchild(newNode, $2.op, $2.line);
+			}
+			else if($1.op[3] != 'I' && onTable->type == dInt){
+				Node *newNode = new_node();
+				newNode->type = rulesNames[to_float];
+				add_child($$, newNode);
+				add_tchild(newNode, $2.op, $2.line);
+			}
+			else{
+				add_tchild($$, $2.op, $2.line);
+			}
+			fprintf(tac, "println $%d\n", onTable->temp);
+		}
+		myfree((void**)&$1.op);
 	}
 
 function_call:
@@ -787,6 +807,22 @@ value:
 		$$ = $1;
 		root = $$;
 		$$->dType = $1->dType;
+	}
+	| UOp value {
+		$$ = new_node();
+		root = $$;
+		$$->line = $1.line;
+		add_tchild($$, $1.op, $1.line);
+		add_child($$, $2);	
+		$$->type = (void*)-1;
+		$$->dType = $2->dType;
+	}
+	| '(' expression ')' {
+		$$ = $2;
+		root = $$;
+		$$->type = (void*)-1;
+		myfree((void**)&$1.op);
+		myfree((void**)&$3.op);
 	}
 
 array_access:
@@ -1033,7 +1069,7 @@ expression:
 	}
 
 expression_1:
-	expression_2 Op1 expression_1 {
+	expression_1 Op1 expression_2 {
 		$$ = new_node();
 		root = $$;
 		$$->line = $1->line;
@@ -1043,10 +1079,10 @@ expression_1:
 		tempStack = intStackPop(tempStack);
 
 		switch($2.op[0]){
-			case '>':
+			case '<':
 				fprintf(tac, "%s $%d, $%d, $%d\n", $2.op[1] == '=' ? "sleq" : "slt", $$->temp, $1->temp, $3->temp);
 				break;
-			case '<':
+			case '>':
 				fprintf(tac, "%s $%d, $%d, $%d\n", $2.op[1] == '=' ? "sleq" : "slt", $$->temp, $3->temp, $1->temp);
 				break;
 			case '=':
@@ -1068,7 +1104,7 @@ expression_1:
 	}
 
 expression_2:
-	expression_3 Op2 expression_2 {
+	expression_2 Op2 expression_3 {
 		$$ = new_node();
 		root = $$;
 		$$->line = $1->line;
@@ -1103,7 +1139,7 @@ expression_2:
 	}
 
 expression_3:
-	value Op3 expression_3 {
+	 expression_3 Op3 value {
 		$$ = new_node();
 		root = $$;
 		$$->line = $1->line;
@@ -1123,36 +1159,9 @@ expression_3:
 		tempStack = intStackPush(tempStack, $1->temp);
 		tempStack = intStackPush(tempStack, $3->temp);
 	}
-	| UOp value {
-		$$ = new_node();
-		root = $$;
-		$$->line = $1.line;
-		add_tchild($$, $1.op, $1.line);
-		add_child($$, $2);
-		$$->type = (void*)-1;
-		$$->dType = $2->dType;
-	}
-	| UOp '(' expression ')' {
-		$$ = new_node();
-		root = $$;
-		$$->line = $1.line;
-		add_tchild($$, $1.op, $1.line);
-		myfree((void**)&$2.op);
-		add_child($$, $3);	
-		myfree((void**)&$4.op);
-		$$->type = (void*)-1;
-		$$->dType = $3->dType;
-	}
 	| value {
 		$$ = $1;
 		root = $$;
-	}
-	| '(' expression ')' {
-		$$ = $2;
-		root = $$;
-		$$->type = (void*)-1;
-		myfree((void**)&$1.op);
-		myfree((void**)&$3.op);
 	}
 
 number:

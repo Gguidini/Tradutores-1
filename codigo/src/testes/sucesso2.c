@@ -4,5 +4,6 @@ int f(int a, int b[], float c[]){
 
 int main(){
 	int x[5];
-	x[3] = f(1, x, x);
+	float y[1];
+	x[3] = f(1, x, y);
 }
