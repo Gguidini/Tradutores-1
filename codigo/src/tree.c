@@ -11,6 +11,7 @@ Node* new_node() {
 	no->op = 0;
 	no->line = 0;
 	no->dType = -1;
+	no->temp = -1;
 	return no;
 }
 

@@ -579,7 +579,7 @@ write:
 		root = $$;
 		$$->line = $1.line;
 		$$->type = rulesNames[writi];
-		$$->op = $2.op;
+		$$->op = $1.op;
 		myfree((void**)&$3.op);
 
 		Symbol *onTable = stack_find($2.op, scopeStack);
@@ -607,7 +607,6 @@ write:
 			}
 			fprintf(tac, "println $%d\n", onTable->temp);
 		}
-		myfree((void**)&$1.op);
 	}
 
 function_call:
