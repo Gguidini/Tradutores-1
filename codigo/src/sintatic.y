@@ -586,6 +586,8 @@ write:
 		$$->op = $2.op;
 		myfree((void**)&$1.op);
 		myfree((void**)&$3.op);
+
+
 	}
 
 function_call:
@@ -948,7 +950,8 @@ expression:
 		$$->type = rulesNames[expression];
 		add_tchild($$, $1.op, $1.line);
 		add_tchild($$, $2.op, $2.line);
-		$$->temp = $3->temp;
+		$$->temp = tempStack->val;
+		tempStack = intStackPop(tempStack);
 
 		Symbol *onTable = stack_find($1.op, scopeStack);
 		if(!onTable){
@@ -968,10 +971,36 @@ expression:
 			}
 			switch($2.op[0]){
 				case '=':
-					fprintf(tac, "mov $%d, $%d\n", onTable->temp, $$->temp);
+					tempStack = intStackPush(tempStack, $$->temp);
+					$$->temp = $3->temp;
+					fprintf(tac, "mov $%d, $%d\n", onTable->temp, $3->temp);
 					break;
+				case '+':
+					fprintf(tac, "add $%d, $%d, $%d\n", $$->temp, onTable->temp, $3->temp);
+					break;
+				case '-':
+					fprintf(tac, "sub $%d, $%d, $%d\n", $$->temp, onTable->temp, $3->temp);
+					break;
+				case '^':
+					fprintf(tac, "bxor $%d, $%d, $%d\n", $$->temp, onTable->temp, $3->temp);
+					break;
+				case '|':
+					fprintf(tac, "bor $%d, $%d, $%d\n", $$->temp, onTable->temp, $3->temp);
+					break;
+				case '&':
+					fprintf(tac, "band $%d, $%d, $%d\n", $$->temp, onTable->temp, $3->temp);
+					break;
+				case '*':
+					fprintf(tac, "mul $%d, $%d, $%d\n", $$->temp, onTable->temp, $3->temp);
+					break;
+				case '/':
+					fprintf(tac, "div $%d, $%d, $%d\n", $$->temp, onTable->temp, $3->temp);
+				break;
 			}
-
+		}
+		if($2.op[0] != '='){
+			fprintf(tac, "mov $%d, $%d\n", onTable->temp, $$->temp);
+			tempStack = intStackPush(tempStack, $3->temp);
 		}
 		lastType = $$->dType;
 	}
@@ -1014,7 +1043,6 @@ expression_1:
 		tempStack = intStackPop(tempStack);
 
 		switch($2.op[0]){
-			//'>'|'<'|"=="|">="|"<="|"&&"|"||"
 			case '>':
 				fprintf(tac, "%s $%d, $%d, $%d\n", $2.op[1] == '=' ? "sleq" : "slt", $$->temp, $1->temp, $3->temp);
 				break;

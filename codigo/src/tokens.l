@@ -8,19 +8,17 @@
 %option bison-bridge
 
 
-DIGIT    [0-9]
+DIGIT   [0-9]
 
-ID       [a-zA-Z_][a-z0-9A-Z]*
+ID      [a-zA-Z_][a-z0-9A-Z]*
 
-KEYWORD  if|else|while|return
+OP1     ">"|"<"|"=="|">="|"<="|"&&"|"||"
 
-OP1 ">"|"<"|"=="|">="|"<="|"&&"|"||"
+OP2     "+"|"-"|"^"|"|"|"&"
 
-OP2 "+"|"-"|"^"|"|"|"&"
+OP3     "*"|"/"
 
-OP3 "*"|"/"
-
-UOP "!"|"~"
+UOP     "!"|"~"
 
 BASIC_TYPE int|float
 
