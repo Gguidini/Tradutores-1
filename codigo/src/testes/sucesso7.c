@@ -1,0 +1,31 @@
+int main(){
+	int x;
+	x = 3 > 2;
+	outInt x;
+	x = 3 < 2;
+	outInt x;
+	x = 3 == 2;
+	outInt x;
+	x = 3 >= 2;
+	outInt x;
+	x = 3 <= 2;
+	outInt x;
+	x = 3 && 2;
+	outInt x;
+	x = 3 || 2;
+	outInt x;
+	x = 3 + 2;
+	outInt x;
+	x = 3 - 2;
+	outInt x;
+	x = 3 ^ 2;
+	outInt x;
+	x = 3 | 2;
+	outInt x;
+	x = 3 & 2;
+	outInt x;
+	x = 3 * 2;
+	outInt x;
+	x = 3 / 2;
+	outInt x;
+}
