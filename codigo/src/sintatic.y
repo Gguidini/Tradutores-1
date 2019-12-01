@@ -158,7 +158,7 @@ extern int yylex_destroy();
     	DataType t1 = toBasicType(f1->dType);
     	DataType t2 = toBasicType(f2->dType);
     	if(t1 != f1->dType || t2 != f2->dType){
-			sprintf(wError + strlen(wError),"Error line %d: no conversion between %s and %s exists\n", pai->line, dTypeName[f1->dType], dTypeName[f2->dType]);
+			sprintf(wError + strlen(wError),"Error line %d: no conversion from %s to %s exists\n", pai->line, dTypeName[f1->dType], dTypeName[f2->dType]);
 			add_child(pai, f1);
 			add_tchild(pai, op.op, op.line);
 			add_child(pai, f2);
@@ -171,6 +171,7 @@ extern int yylex_destroy();
 			add_child(newNode, f1);
 			add_tchild(pai, op.op, op.line);
 			add_child(pai, f2);
+			fprintf(tac, "inttofl $%d, $%d\n", f1->temp, f1->temp);
 		}
 		else if(t1 > t2){
 			Node *newNode = new_node();
@@ -179,6 +180,7 @@ extern int yylex_destroy();
 			add_tchild(pai, op.op, op.line);
 			add_child(pai, newNode);
 			add_child(newNode, f2);
+			fprintf(tac, "inttofl $%d, $%d\n", f1->temp, f1->temp);
 		}
 		else{
 			add_child(pai, f1);
@@ -197,7 +199,7 @@ extern int yylex_destroy();
 		}
 		if(parameters->val != arguments->val){
 			if(toBasicType(arguments->val) != arguments->val || toBasicType(parameters->val) != parameters->val){
-				sprintf(wError + strlen(wError),"Error line %d: no conversion between %s and %s exists\n", line, dTypeName[arguments->val], dTypeName[parameters->val]);
+				sprintf(wError + strlen(wError),"Error line %d: no conversion from %s to %s exists\n", line, dTypeName[arguments->val], dTypeName[parameters->val]);
 			}
 			else{
 				sprintf(wError + strlen(wError),"Warning line %d: not converting %s to %s on call to %s\n", line, dTypeName[arguments->val], dTypeName[parameters->val], func->name );
@@ -587,25 +589,22 @@ write:
 			sprintf(wError + strlen(wError),"Error line %d: variable %s used but not declared\n", $1.line, $1.op);
 		}
 		else{
+			int temp = onTable->temp;
 			if(onTable->type != toBasicType(onTable->type)){
-				sprintf(wError + strlen(wError),"Error line %d: no conversion between %s and %s exists\n", $1.line, dTypeName[onTable->type], $1.op[3] == 'I' ? "int" : "float");
+				sprintf(wError + strlen(wError),"Error line %d: no conversion from %s to %s exists\n", $1.line, dTypeName[onTable->type], $1.op[3] == 'I' ? "int" : "float");
 			}
-			else if($1.op[3] == 'I' && onTable->type != dInt){
+			else if(($1.op[3] == 'I' && onTable->type != dInt) || ($1.op[3] != 'I' && onTable->type == dInt)){
 				Node *newNode = new_node();
-				newNode->type = rulesNames[to_int];
+				newNode->type = rulesNames[($1.op[3] == 'I' && onTable->type != dInt) ? to_int : to_float];
 				add_child($$, newNode);
 				add_tchild(newNode, $2.op, $2.line);
-			}
-			else if($1.op[3] != 'I' && onTable->type == dInt){
-				Node *newNode = new_node();
-				newNode->type = rulesNames[to_float];
-				add_child($$, newNode);
-				add_tchild(newNode, $2.op, $2.line);
+				fprintf(tac, "%s $%d, $%d\n", ($1.op[3] == 'I' && onTable->type != dInt) ? "fltoint" : "inttofl", tempStack->val, temp);
+				temp = tempStack->val;
 			}
 			else{
 				add_tchild($$, $2.op, $2.line);
 			}
-			fprintf(tac, "println $%d\n", onTable->temp);
+			fprintf(tac, "println $%d\n", temp);
 		}
 	}
 
@@ -747,7 +746,7 @@ retrn:
 		add_tchild($$, $1.op, $1.line);
 		if($2->dType != funcType){
 			if(toBasicType(funcType) != funcType || $2->dType != toBasicType($2->dType)){
-				sprintf(wError + strlen(wError),"Error line %d: no conversion between %s and %s exists\n", $1.line, dTypeName[$2->dType], dTypeName[funcType]);
+				sprintf(wError + strlen(wError),"Error line %d: no conversion from %s to %s exists\n", $1.line, dTypeName[$2->dType], dTypeName[funcType]);
 				add_child($$, $2);
 			}
 			else{
@@ -994,7 +993,7 @@ expression:
 		else{
 			if(onTable->type != $3->dType){
 				if(toBasicType(onTable->type) != onTable->type || toBasicType($3->dType) != $3->dType){
-					sprintf(wError + strlen(wError),"Error line %d: no conversion between %s and %s exists\n", $1.line, dTypeName[$3->dType], dTypeName[onTable->type]);
+					sprintf(wError + strlen(wError),"Error line %d: no conversion from %s to %s exists\n", $1.line, dTypeName[$3->dType], dTypeName[onTable->type]);
 					add_child($$, $3);
 				}
 				else{
@@ -1051,7 +1050,7 @@ expression:
 		add_tchild($$, $2.op, $2.line);
 		if($1->dType != $3->dType){
 			if(toBasicType($1->dType) != $1->dType || toBasicType($3->dType) != $3->dType){
-				sprintf(wError + strlen(wError),"Error line %d: no conversion between %s and %s exists\n", $1->line, dTypeName[$3->dType], dTypeName[$1->dType]);
+				sprintf(wError + strlen(wError),"Error line %d: no conversion from %s to %s exists\n", $1->line, dTypeName[$3->dType], dTypeName[$1->dType]);
 				add_child($$, $3);
 			}
 			else{
