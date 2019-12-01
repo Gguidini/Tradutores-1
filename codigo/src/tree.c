@@ -10,8 +10,8 @@ Node* new_node() {
 	no->lastChild = 0;
 	no->op = 0;
 	no->line = 0;
-	no->dType = -1;
-	no->temp = -1;
+	no->dType = 0;
+	no->temp = 0;
 	return no;
 }
 

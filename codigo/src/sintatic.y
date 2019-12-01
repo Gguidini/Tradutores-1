@@ -741,7 +741,16 @@ else_if:
 	}
 
 loop:
-	While { scopeStack = intStackPush(scopeStack, $1.pos); } '(' expression ')' '{' statments '}' {
+	While {
+		scopeStack = intStackPush(scopeStack, $1.pos);
+		fprintf(tac, "__%d:\n", labelId);
+		labelStack = intStackPush(labelStack, labelId++);
+	} '(' expression ')' {
+		fprintf(tac, "brz __%d, $%d\n", labelId, $4->temp);
+		labelStack = intStackPush(labelStack, labelId++);
+		tempStack = intStackPush(tempStack, $4->temp);
+	}
+	'{' statments '}' {
 		$$ = new_node();
 		root = $$;
 		$$->line = $1.line;
@@ -749,11 +758,17 @@ loop:
 		myfree((void**)&$3.op);
 		add_child($$, $4);
 		myfree((void**)&$5.op);
-		myfree((void**)&$6.op);
-		add_child($$, $7);
-		myfree((void**)&$8.op);
+		myfree((void**)&$7.op);
+		add_child($$, $8);
+		myfree((void**)&$9.op);
 		$$->type = rulesNames[loop];
 		scopeStack = intStackPop(scopeStack);
+
+		int endLabel = labelStack->val;
+		labelStack = intStackPop(labelStack);
+		fprintf(tac, "jump __%d\n", labelStack->val);
+		labelStack = intStackPop(labelStack);
+		fprintf(tac, "__%d:\n", endLabel);
 	}
 
 retrn:
@@ -1247,5 +1262,6 @@ int main (void) {
 	printf("\n");
 	printf("%s\n",wError );
 
+	fprintf(tac, "nop\n");
 	fclose(tac);
 }
