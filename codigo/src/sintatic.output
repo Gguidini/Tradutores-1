@@ -100,8 +100,8 @@ Grammar
    60                 | "id" '[' "integer" ']'
    61                 | "id"
 
-   62 expression: "id" assignment expression
-   63           | array_access assignment expression
+   62 expression: "id" "assignment" expression
+   63           | array_access "assignment" expression
    64           | expression_1
 
    65 expression_1: expression_2 "op1" expression_1
@@ -116,10 +116,8 @@ Grammar
    72             | value
    73             | '(' expression ')'
 
-   74 assignment: "assignment"
-
-   75 number: "integer"
-   76       | "float"
+   74 number: "integer"
+   75       | "float"
 
 
 Terminals, with rules where they appear
@@ -129,14 +127,14 @@ Terminals, with rules where they appear
     ')' <tok> (41) 11 12 34 42 47 71 73
     ',' <tok> (44) 13 37 54 58 59
     ';' <tok> (59) 27 31 32 48 55 56 57
-    "assignment" <tok> (61) 74
+    "assignment" <tok> (61) 62 63
     '[' <tok> (91) 16 53 54 59 60
     ']' <tok> (93) 16 53 54 59 60
     '{' <tok> (123) 10 21 40 41 45 47
     '}' <tok> (125) 10 21 40 41 45 47
     error (256) 7 8 30 56 57
-    "integer" <tok> (258) 59 60 75
-    "float" <tok> (259) 76
+    "integer" <tok> (258) 59 60 74
+    "float" <tok> (259) 75
     "return" <tok> (260) 48
     "if" <tok> (261) 42
     "else" <tok> (262) 43 45
@@ -262,11 +260,8 @@ Nonterminals, with rules where they appear
     expression_3 <node> (63)
         on left: 69 70 71 72 73
         on right: 67 68 69
-    assignment <node> (64)
-        on left: 74
-        on right: 62 63
-    number <node> (65)
-        on left: 75 76
+    number <node> (64)
+        on left: 74 75
         on right: 50
 
 
@@ -630,8 +625,8 @@ State 27
    55 variables_declaration: . type_identifier identifiers_list ';'
    56                      | . type_identifier error ';'
    57                      | . error identifiers_list ';'
-   62 expression: . "id" assignment expression
-   63           | . array_access assignment expression
+   62 expression: . "id" "assignment" expression
+   63           | . array_access "assignment" expression
    64           | . expression_1
    65 expression_1: . expression_2 "op1" expression_1
    66             | . expression_2
@@ -642,8 +637,8 @@ State 27
    71             | . "uop" '(' expression ')'
    72             | . value
    73             | . '(' expression ')'
-   75 number: . "integer"
-   76       | . "float"
+   74 number: . "integer"
+   75       | . "float"
 
     error      shift, and go to state 39
     "integer"  shift, and go to state 40
@@ -781,16 +776,16 @@ State 39
 
 State 40
 
-   75 number: "integer" .
+   74 number: "integer" .
 
-    $default  reduce using rule 75 (number)
+    $default  reduce using rule 74 (number)
 
 
 State 41
 
-   76 number: "float" .
+   75 number: "float" .
 
-    $default  reduce using rule 76 (number)
+    $default  reduce using rule 75 (number)
 
 
 State 42
@@ -803,8 +798,8 @@ State 42
    52      | . function_call
    53 array_access: . "id" '[' expression ']'
    54             | . "id" '[' expression ',' expression ']'
-   62 expression: . "id" assignment expression
-   63           | . array_access assignment expression
+   62 expression: . "id" "assignment" expression
+   63           | . array_access "assignment" expression
    64           | . expression_1
    65 expression_1: . expression_2 "op1" expression_1
    66             | . expression_2
@@ -815,8 +810,8 @@ State 42
    71             | . "uop" '(' expression ')'
    72             | . value
    73             | . '(' expression ')'
-   75 number: . "integer"
-   76       | . "float"
+   74 number: . "integer"
+   75       | . "float"
 
     "integer"  shift, and go to state 40
     "float"    shift, and go to state 41
@@ -872,8 +867,7 @@ State 47
    49 value: "id" .  ["op1", "op2", "op3", ')', ']', ';', ',']
    53 array_access: "id" . '[' expression ']'
    54             | "id" . '[' expression ',' expression ']'
-   62 expression: "id" . assignment expression
-   74 assignment: . "assignment"
+   62 expression: "id" . "assignment" expression
 
     "assignment"  shift, and go to state 78
     '['           shift, and go to state 79
@@ -881,8 +875,7 @@ State 47
     '('       reduce using rule 33 ($@3)
     $default  reduce using rule 49 (value)
 
-    $@3         go to state 80
-    assignment  go to state 81
+    $@3  go to state 80
 
 
 State 48
@@ -896,17 +889,17 @@ State 48
    54             | . "id" '[' expression ',' expression ']'
    70 expression_3: "uop" . value
    71             | "uop" . '(' expression ')'
-   75 number: . "integer"
-   76       | . "float"
+   74 number: . "integer"
+   75       | . "float"
 
     "integer"  shift, and go to state 40
     "float"    shift, and go to state 41
-    "id"       shift, and go to state 82
-    '('        shift, and go to state 83
+    "id"       shift, and go to state 81
+    '('        shift, and go to state 82
 
     function_call  go to state 56
-    value          go to state 84
-    array_access   go to state 85
+    value          go to state 83
+    array_access   go to state 84
     number         go to state 68
 
 
@@ -919,8 +912,8 @@ State 49
    52      | . function_call
    53 array_access: . "id" '[' expression ']'
    54             | . "id" '[' expression ',' expression ']'
-   62 expression: . "id" assignment expression
-   63           | . array_access assignment expression
+   62 expression: . "id" "assignment" expression
+   63           | . array_access "assignment" expression
    64           | . expression_1
    65 expression_1: . expression_2 "op1" expression_1
    66             | . expression_2
@@ -932,8 +925,8 @@ State 49
    72             | . value
    73             | . '(' expression ')'
    73             | '(' . expression ')'
-   75 number: . "integer"
-   76       | . "float"
+   74 number: . "integer"
+   75       | . "float"
 
     "integer"  shift, and go to state 40
     "float"    shift, and go to state 41
@@ -944,7 +937,7 @@ State 49
     function_call  go to state 56
     value          go to state 61
     array_access   go to state 62
-    expression     go to state 86
+    expression     go to state 85
     expression_1   go to state 65
     expression_2   go to state 66
     expression_3   go to state 67
@@ -958,7 +951,7 @@ State 50
 
     $default  reduce using rule 20 ($@2)
 
-    $@2  go to state 87
+    $@2  go to state 86
 
 
 State 51
@@ -980,7 +973,7 @@ State 52
 
    10 function_body: '{' statments . '}'
 
-    '}'  shift, and go to state 88
+    '}'  shift, and go to state 87
 
 
 State 53
@@ -1017,8 +1010,8 @@ State 53
    55 variables_declaration: . type_identifier identifiers_list ';'
    56                      | . type_identifier error ';'
    57                      | . error identifiers_list ';'
-   62 expression: . "id" assignment expression
-   63           | . array_access assignment expression
+   62 expression: . "id" "assignment" expression
+   63           | . array_access "assignment" expression
    64           | . expression_1
    65 expression_1: . expression_2 "op1" expression_1
    66             | . expression_2
@@ -1029,8 +1022,8 @@ State 53
    71             | . "uop" '(' expression ')'
    72             | . value
    73             | . '(' expression ')'
-   75 number: . "integer"
-   76       | . "float"
+   74 number: . "integer"
+   75       | . "float"
 
     error      shift, and go to state 39
     "integer"  shift, and go to state 40
@@ -1050,7 +1043,7 @@ State 53
     '}'  reduce using rule 22 (statments)
 
     type_identifier        go to state 51
-    statments              go to state 89
+    statments              go to state 88
     statment               go to state 53
     read                   go to state 54
     write                  go to state 55
@@ -1102,7 +1095,7 @@ State 58
    40 conditional: if . '{' statments '}' $@4 else_if
    41            | if . '{' statments '}'
 
-    '{'  shift, and go to state 90
+    '{'  shift, and go to state 89
 
 
 State 59
@@ -1124,7 +1117,7 @@ State 61
    69 expression_3: value . "op3" expression_3
    72             | value .  ["op1", "op2", ')', ']', ';', ',']
 
-    "op3"  shift, and go to state 91
+    "op3"  shift, and go to state 90
 
     $default  reduce using rule 72 (expression_3)
 
@@ -1132,14 +1125,11 @@ State 61
 State 62
 
    51 value: array_access .  ["op1", "op2", "op3", ')', ']', ';', ',']
-   63 expression: array_access . assignment expression
-   74 assignment: . "assignment"
+   63 expression: array_access . "assignment" expression
 
-    "assignment"  shift, and go to state 78
+    "assignment"  shift, and go to state 91
 
     $default  reduce using rule 51 (value)
-
-    assignment  go to state 92
 
 
 State 63
@@ -1153,7 +1143,7 @@ State 64
 
    27 statment: expression . ';'
 
-    ';'  shift, and go to state 93
+    ';'  shift, and go to state 92
 
 
 State 65
@@ -1168,7 +1158,7 @@ State 66
    65 expression_1: expression_2 . "op1" expression_1
    66             | expression_2 .  [')', ']', ';', ',']
 
-    "op1"  shift, and go to state 94
+    "op1"  shift, and go to state 93
 
     $default  reduce using rule 66 (expression_1)
 
@@ -1178,7 +1168,7 @@ State 67
    67 expression_2: expression_3 . "op2" expression_2
    68             | expression_3 .  ["op1", ')', ']', ';', ',']
 
-    "op2"  shift, and go to state 95
+    "op2"  shift, and go to state 94
 
     $default  reduce using rule 68 (expression_2)
 
@@ -1210,7 +1200,7 @@ State 70
     "type"     shift, and go to state 2
     "arrayOp"  shift, and go to state 3
 
-    parameters_list  go to state 96
+    parameters_list  go to state 95
     parameter        go to state 31
     type_identifier  go to state 32
 
@@ -1220,7 +1210,7 @@ State 71
    15 parameter: type_identifier "id" .  [')', ',']
    16          | type_identifier "id" . '[' ']'
 
-    '['  shift, and go to state 97
+    '['  shift, and go to state 96
 
     $default  reduce using rule 15 (parameter)
 
@@ -1230,7 +1220,7 @@ State 72
    59 identifiers_list: "id" '[' "integer" ']' . ',' identifiers_list
    60                 | "id" '[' "integer" ']' .  [';']
 
-    ','  shift, and go to state 98
+    ','  shift, and go to state 97
 
     $default  reduce using rule 60 (identifiers_list)
 
@@ -1239,7 +1229,7 @@ State 73
 
    48 retrn: "return" expression . ';'
 
-    ';'  shift, and go to state 99
+    ';'  shift, and go to state 98
 
 
 State 74
@@ -1252,8 +1242,8 @@ State 74
    52      | . function_call
    53 array_access: . "id" '[' expression ']'
    54             | . "id" '[' expression ',' expression ']'
-   62 expression: . "id" assignment expression
-   63           | . array_access assignment expression
+   62 expression: . "id" "assignment" expression
+   63           | . array_access "assignment" expression
    64           | . expression_1
    65 expression_1: . expression_2 "op1" expression_1
    66             | . expression_2
@@ -1264,8 +1254,8 @@ State 74
    71             | . "uop" '(' expression ')'
    72             | . value
    73             | . '(' expression ')'
-   75 number: . "integer"
-   76       | . "float"
+   74 number: . "integer"
+   75       | . "float"
 
     "integer"  shift, and go to state 40
     "float"    shift, and go to state 41
@@ -1276,7 +1266,7 @@ State 74
     function_call  go to state 56
     value          go to state 61
     array_access   go to state 62
-    expression     go to state 100
+    expression     go to state 99
     expression_1   go to state 65
     expression_2   go to state 66
     expression_3   go to state 67
@@ -1287,28 +1277,62 @@ State 75
 
    47 loop: "while" $@6 . '(' expression ')' '{' statments '}'
 
-    '('  shift, and go to state 101
+    '('  shift, and go to state 100
 
 
 State 76
 
    32 write: "write" "id" . ';'
 
-    ';'  shift, and go to state 102
+    ';'  shift, and go to state 101
 
 
 State 77
 
    31 read: "read" "id" . ';'
 
-    ';'  shift, and go to state 103
+    ';'  shift, and go to state 102
 
 
 State 78
 
-   74 assignment: "assignment" .
+   34 function_call: . "id" $@3 '(' arguments ')'
+   49 value: . "id"
+   50      | . number
+   51      | . array_access
+   52      | . function_call
+   53 array_access: . "id" '[' expression ']'
+   54             | . "id" '[' expression ',' expression ']'
+   62 expression: . "id" "assignment" expression
+   62           | "id" "assignment" . expression
+   63           | . array_access "assignment" expression
+   64           | . expression_1
+   65 expression_1: . expression_2 "op1" expression_1
+   66             | . expression_2
+   67 expression_2: . expression_3 "op2" expression_2
+   68             | . expression_3
+   69 expression_3: . value "op3" expression_3
+   70             | . "uop" value
+   71             | . "uop" '(' expression ')'
+   72             | . value
+   73             | . '(' expression ')'
+   74 number: . "integer"
+   75       | . "float"
 
-    $default  reduce using rule 74 (assignment)
+    "integer"  shift, and go to state 40
+    "float"    shift, and go to state 41
+    "id"       shift, and go to state 47
+    "uop"      shift, and go to state 48
+    '('        shift, and go to state 49
+
+    function_call  go to state 56
+    value          go to state 61
+    array_access   go to state 62
+    expression     go to state 103
+    expression_1   go to state 65
+    expression_2   go to state 66
+    expression_3   go to state 67
+    number         go to state 68
 
 
 State 79
@@ -1322,8 +1346,8 @@ State 79
    53             | "id" '[' . expression ']'
    54             | . "id" '[' expression ',' expression ']'
    54             | "id" '[' . expression ',' expression ']'
-   62 expression: . "id" assignment expression
-   63           | . array_access assignment expression
+   62 expression: . "id" "assignment" expression
+   63           | . array_access "assignment" expression
    64           | . expression_1
    65 expression_1: . expression_2 "op1" expression_1
    66             | . expression_2
@@ -1334,8 +1358,8 @@ State 79
    71             | . "uop" '(' expression ')'
    72             | . value
    73             | . '(' expression ')'
-   75 number: . "integer"
-   76       | . "float"
+   74 number: . "integer"
+   75       | . "float"
 
     "integer"  shift, and go to state 40
     "float"    shift, and go to state 41
@@ -1362,6 +1386,22 @@ State 80
 
 State 81
 
+   33 $@3: . %empty  ['(']
+   34 function_call: "id" . $@3 '(' arguments ')'
+   49 value: "id" .  ["op1", "op2", "op3", ')', ']', ';', ',']
+   53 array_access: "id" . '[' expression ']'
+   54             | "id" . '[' expression ',' expression ']'
+
+    '['  shift, and go to state 79
+
+    '('       reduce using rule 33 ($@3)
+    $default  reduce using rule 49 (value)
+
+    $@3  go to state 80
+
+
+State 82
+
    34 function_call: . "id" $@3 '(' arguments ')'
    49 value: . "id"
    50      | . number
@@ -1369,9 +1409,8 @@ State 81
    52      | . function_call
    53 array_access: . "id" '[' expression ']'
    54             | . "id" '[' expression ',' expression ']'
-   62 expression: . "id" assignment expression
-   62           | "id" assignment . expression
-   63           | . array_access assignment expression
+   62 expression: . "id" "assignment" expression
+   63           | . array_access "assignment" expression
    64           | . expression_1
    65 expression_1: . expression_2 "op1" expression_1
    66             | . expression_2
@@ -1380,10 +1419,11 @@ State 81
    69 expression_3: . value "op3" expression_3
    70             | . "uop" value
    71             | . "uop" '(' expression ')'
+   71             | "uop" '(' . expression ')'
    72             | . value
    73             | . '(' expression ')'
-   75 number: . "integer"
-   76       | . "float"
+   74 number: . "integer"
+   75       | . "float"
 
     "integer"  shift, and go to state 40
     "float"    shift, and go to state 41
@@ -1401,85 +1441,28 @@ State 81
     number         go to state 68
 
 
-State 82
-
-   33 $@3: . %empty  ['(']
-   34 function_call: "id" . $@3 '(' arguments ')'
-   49 value: "id" .  ["op1", "op2", "op3", ')', ']', ';', ',']
-   53 array_access: "id" . '[' expression ']'
-   54             | "id" . '[' expression ',' expression ']'
-
-    '['  shift, and go to state 79
-
-    '('       reduce using rule 33 ($@3)
-    $default  reduce using rule 49 (value)
-
-    $@3  go to state 80
-
-
 State 83
-
-   34 function_call: . "id" $@3 '(' arguments ')'
-   49 value: . "id"
-   50      | . number
-   51      | . array_access
-   52      | . function_call
-   53 array_access: . "id" '[' expression ']'
-   54             | . "id" '[' expression ',' expression ']'
-   62 expression: . "id" assignment expression
-   63           | . array_access assignment expression
-   64           | . expression_1
-   65 expression_1: . expression_2 "op1" expression_1
-   66             | . expression_2
-   67 expression_2: . expression_3 "op2" expression_2
-   68             | . expression_3
-   69 expression_3: . value "op3" expression_3
-   70             | . "uop" value
-   71             | . "uop" '(' expression ')'
-   71             | "uop" '(' . expression ')'
-   72             | . value
-   73             | . '(' expression ')'
-   75 number: . "integer"
-   76       | . "float"
-
-    "integer"  shift, and go to state 40
-    "float"    shift, and go to state 41
-    "id"       shift, and go to state 47
-    "uop"      shift, and go to state 48
-    '('        shift, and go to state 49
-
-    function_call  go to state 56
-    value          go to state 61
-    array_access   go to state 62
-    expression     go to state 107
-    expression_1   go to state 65
-    expression_2   go to state 66
-    expression_3   go to state 67
-    number         go to state 68
-
-
-State 84
 
    70 expression_3: "uop" value .
 
     $default  reduce using rule 70 (expression_3)
 
 
-State 85
+State 84
 
    51 value: array_access .
 
     $default  reduce using rule 51 (value)
 
 
-State 86
+State 85
 
    73 expression_3: '(' expression . ')'
 
-    ')'  shift, and go to state 108
+    ')'  shift, and go to state 107
 
 
-State 87
+State 86
 
    17 type_identifier: . "arrayOp" "arrayType"
    18                | . "type"
@@ -1512,8 +1495,8 @@ State 87
    55 variables_declaration: . type_identifier identifiers_list ';'
    56                      | . type_identifier error ';'
    57                      | . error identifiers_list ';'
-   62 expression: . "id" assignment expression
-   63           | . array_access assignment expression
+   62 expression: . "id" "assignment" expression
+   63           | . array_access "assignment" expression
    64           | . expression_1
    65 expression_1: . expression_2 "op1" expression_1
    66             | . expression_2
@@ -1524,8 +1507,106 @@ State 87
    71             | . "uop" '(' expression ')'
    72             | . value
    73             | . '(' expression ')'
-   75 number: . "integer"
-   76       | . "float"
+   74 number: . "integer"
+   75       | . "float"
+
+    error      shift, and go to state 39
+    "integer"  shift, and go to state 40
+    "float"    shift, and go to state 41
+    "return"   shift, and go to state 42
+    "if"       shift, and go to state 43
+    "while"    shift, and go to state 44
+    "write"    shift, and go to state 45
+    "read"     shift, and go to state 46
+    "type"     shift, and go to state 2
+    "arrayOp"  shift, and go to state 3
+    "id"       shift, and go to state 47
+    "uop"      shift, and go to state 48
+    '('        shift, and go to state 49
+    '{'        shift, and go to state 50
+
+    type_identifier        go to state 51
+    statments              go to state 108
+    statment               go to state 53
+    read                   go to state 54
+    write                  go to state 55
+    function_call          go to state 56
+    conditional            go to state 57
+    if                     go to state 58
+    loop                   go to state 59
+    retrn                  go to state 60
+    value                  go to state 61
+    array_access           go to state 62
+    variables_declaration  go to state 63
+    expression             go to state 64
+    expression_1           go to state 65
+    expression_2           go to state 66
+    expression_3           go to state 67
+    number                 go to state 68
+
+
+State 87
+
+   10 function_body: '{' statments '}' .
+
+    $default  reduce using rule 10 (function_body)
+
+
+State 88
+
+   19 statments: statment statments .
+
+    $default  reduce using rule 19 (statments)
+
+
+State 89
+
+   17 type_identifier: . "arrayOp" "arrayType"
+   18                | . "type"
+   19 statments: . statment statments
+   21          | . '{' $@2 statments '}'
+   22          | . statment
+   23 statment: . variables_declaration
+   24         | . retrn
+   25         | . conditional
+   26         | . loop
+   27         | . expression ';'
+   28         | . read
+   29         | . write
+   30         | . error
+   31 read: . "read" "id" ';'
+   32 write: . "write" "id" ';'
+   34 function_call: . "id" $@3 '(' arguments ')'
+   40 conditional: . if '{' statments '}' $@4 else_if
+   40            | if '{' . statments '}' $@4 else_if
+   41            | . if '{' statments '}'
+   41            | if '{' . statments '}'
+   42 if: . "if" '(' expression ')'
+   47 loop: . "while" $@6 '(' expression ')' '{' statments '}'
+   48 retrn: . "return" expression ';'
+   49 value: . "id"
+   50      | . number
+   51      | . array_access
+   52      | . function_call
+   53 array_access: . "id" '[' expression ']'
+   54             | . "id" '[' expression ',' expression ']'
+   55 variables_declaration: . type_identifier identifiers_list ';'
+   56                      | . type_identifier error ';'
+   57                      | . error identifiers_list ';'
+   62 expression: . "id" "assignment" expression
+   63           | . array_access "assignment" expression
+   64           | . expression_1
+   65 expression_1: . expression_2 "op1" expression_1
+   66             | . expression_2
+   67 expression_2: . expression_3 "op2" expression_2
+   68             | . expression_3
+   69 expression_3: . value "op3" expression_3
+   70             | . "uop" value
+   71             | . "uop" '(' expression ')'
+   72             | . value
+   73             | . '(' expression ')'
+   74 number: . "integer"
+   75       | . "float"
 
     error      shift, and go to state 39
     "integer"  shift, and go to state 40
@@ -1562,105 +1643,7 @@ State 87
     number                 go to state 68
 
 
-State 88
-
-   10 function_body: '{' statments '}' .
-
-    $default  reduce using rule 10 (function_body)
-
-
-State 89
-
-   19 statments: statment statments .
-
-    $default  reduce using rule 19 (statments)
-
-
 State 90
-
-   17 type_identifier: . "arrayOp" "arrayType"
-   18                | . "type"
-   19 statments: . statment statments
-   21          | . '{' $@2 statments '}'
-   22          | . statment
-   23 statment: . variables_declaration
-   24         | . retrn
-   25         | . conditional
-   26         | . loop
-   27         | . expression ';'
-   28         | . read
-   29         | . write
-   30         | . error
-   31 read: . "read" "id" ';'
-   32 write: . "write" "id" ';'
-   34 function_call: . "id" $@3 '(' arguments ')'
-   40 conditional: . if '{' statments '}' $@4 else_if
-   40            | if '{' . statments '}' $@4 else_if
-   41            | . if '{' statments '}'
-   41            | if '{' . statments '}'
-   42 if: . "if" '(' expression ')'
-   47 loop: . "while" $@6 '(' expression ')' '{' statments '}'
-   48 retrn: . "return" expression ';'
-   49 value: . "id"
-   50      | . number
-   51      | . array_access
-   52      | . function_call
-   53 array_access: . "id" '[' expression ']'
-   54             | . "id" '[' expression ',' expression ']'
-   55 variables_declaration: . type_identifier identifiers_list ';'
-   56                      | . type_identifier error ';'
-   57                      | . error identifiers_list ';'
-   62 expression: . "id" assignment expression
-   63           | . array_access assignment expression
-   64           | . expression_1
-   65 expression_1: . expression_2 "op1" expression_1
-   66             | . expression_2
-   67 expression_2: . expression_3 "op2" expression_2
-   68             | . expression_3
-   69 expression_3: . value "op3" expression_3
-   70             | . "uop" value
-   71             | . "uop" '(' expression ')'
-   72             | . value
-   73             | . '(' expression ')'
-   75 number: . "integer"
-   76       | . "float"
-
-    error      shift, and go to state 39
-    "integer"  shift, and go to state 40
-    "float"    shift, and go to state 41
-    "return"   shift, and go to state 42
-    "if"       shift, and go to state 43
-    "while"    shift, and go to state 44
-    "write"    shift, and go to state 45
-    "read"     shift, and go to state 46
-    "type"     shift, and go to state 2
-    "arrayOp"  shift, and go to state 3
-    "id"       shift, and go to state 47
-    "uop"      shift, and go to state 48
-    '('        shift, and go to state 49
-    '{'        shift, and go to state 50
-
-    type_identifier        go to state 51
-    statments              go to state 110
-    statment               go to state 53
-    read                   go to state 54
-    write                  go to state 55
-    function_call          go to state 56
-    conditional            go to state 57
-    if                     go to state 58
-    loop                   go to state 59
-    retrn                  go to state 60
-    value                  go to state 61
-    array_access           go to state 62
-    variables_declaration  go to state 63
-    expression             go to state 64
-    expression_1           go to state 65
-    expression_2           go to state 66
-    expression_3           go to state 67
-    number                 go to state 68
-
-
-State 91
 
    34 function_call: . "id" $@3 '(' arguments ')'
    49 value: . "id"
@@ -1675,23 +1658,23 @@ State 91
    71             | . "uop" '(' expression ')'
    72             | . value
    73             | . '(' expression ')'
-   75 number: . "integer"
-   76       | . "float"
+   74 number: . "integer"
+   75       | . "float"
 
     "integer"  shift, and go to state 40
     "float"    shift, and go to state 41
-    "id"       shift, and go to state 82
+    "id"       shift, and go to state 81
     "uop"      shift, and go to state 48
     '('        shift, and go to state 49
 
     function_call  go to state 56
     value          go to state 61
-    array_access   go to state 85
-    expression_3   go to state 111
+    array_access   go to state 84
+    expression_3   go to state 110
     number         go to state 68
 
 
-State 92
+State 91
 
    34 function_call: . "id" $@3 '(' arguments ')'
    49 value: . "id"
@@ -1700,9 +1683,9 @@ State 92
    52      | . function_call
    53 array_access: . "id" '[' expression ']'
    54             | . "id" '[' expression ',' expression ']'
-   62 expression: . "id" assignment expression
-   63           | . array_access assignment expression
-   63           | array_access assignment . expression
+   62 expression: . "id" "assignment" expression
+   63           | . array_access "assignment" expression
+   63           | array_access "assignment" . expression
    64           | . expression_1
    65 expression_1: . expression_2 "op1" expression_1
    66             | . expression_2
@@ -1713,8 +1696,8 @@ State 92
    71             | . "uop" '(' expression ')'
    72             | . value
    73             | . '(' expression ')'
-   75 number: . "integer"
-   76       | . "float"
+   74 number: . "integer"
+   75       | . "float"
 
     "integer"  shift, and go to state 40
     "float"    shift, and go to state 41
@@ -1725,21 +1708,21 @@ State 92
     function_call  go to state 56
     value          go to state 61
     array_access   go to state 62
-    expression     go to state 112
+    expression     go to state 111
     expression_1   go to state 65
     expression_2   go to state 66
     expression_3   go to state 67
     number         go to state 68
 
 
-State 93
+State 92
 
    27 statment: expression ';' .
 
     $default  reduce using rule 27 (statment)
 
 
-State 94
+State 93
 
    34 function_call: . "id" $@3 '(' arguments ')'
    49 value: . "id"
@@ -1758,25 +1741,25 @@ State 94
    71             | . "uop" '(' expression ')'
    72             | . value
    73             | . '(' expression ')'
-   75 number: . "integer"
-   76       | . "float"
+   74 number: . "integer"
+   75       | . "float"
 
     "integer"  shift, and go to state 40
     "float"    shift, and go to state 41
-    "id"       shift, and go to state 82
+    "id"       shift, and go to state 81
     "uop"      shift, and go to state 48
     '('        shift, and go to state 49
 
     function_call  go to state 56
     value          go to state 61
-    array_access   go to state 85
-    expression_1   go to state 113
+    array_access   go to state 84
+    expression_1   go to state 112
     expression_2   go to state 66
     expression_3   go to state 67
     number         go to state 68
 
 
-State 95
+State 94
 
    34 function_call: . "id" $@3 '(' arguments ')'
    49 value: . "id"
@@ -1793,38 +1776,38 @@ State 95
    71             | . "uop" '(' expression ')'
    72             | . value
    73             | . '(' expression ')'
-   75 number: . "integer"
-   76       | . "float"
+   74 number: . "integer"
+   75       | . "float"
 
     "integer"  shift, and go to state 40
     "float"    shift, and go to state 41
-    "id"       shift, and go to state 82
+    "id"       shift, and go to state 81
     "uop"      shift, and go to state 48
     '('        shift, and go to state 49
 
     function_call  go to state 56
     value          go to state 61
-    array_access   go to state 85
-    expression_2   go to state 114
+    array_access   go to state 84
+    expression_2   go to state 113
     expression_3   go to state 67
     number         go to state 68
 
 
-State 96
+State 95
 
    13 parameters_list: parameter ',' parameters_list .
 
     $default  reduce using rule 13 (parameters_list)
 
 
-State 97
+State 96
 
    16 parameter: type_identifier "id" '[' . ']'
 
-    ']'  shift, and go to state 115
+    ']'  shift, and go to state 114
 
 
-State 98
+State 97
 
    58 identifiers_list: . "id" ',' identifiers_list
    59                 | . "id" '[' "integer" ']' ',' identifiers_list
@@ -1834,24 +1817,24 @@ State 98
 
     "id"  shift, and go to state 10
 
-    identifiers_list  go to state 116
+    identifiers_list  go to state 115
 
 
-State 99
+State 98
 
    48 retrn: "return" expression ';' .
 
     $default  reduce using rule 48 (retrn)
 
 
-State 100
+State 99
 
    42 if: "if" '(' expression . ')'
 
-    ')'  shift, and go to state 117
+    ')'  shift, and go to state 116
 
 
-State 101
+State 100
 
    34 function_call: . "id" $@3 '(' arguments ')'
    47 loop: "while" $@6 '(' . expression ')' '{' statments '}'
@@ -1861,8 +1844,8 @@ State 101
    52      | . function_call
    53 array_access: . "id" '[' expression ']'
    54             | . "id" '[' expression ',' expression ']'
-   62 expression: . "id" assignment expression
-   63           | . array_access assignment expression
+   62 expression: . "id" "assignment" expression
+   63           | . array_access "assignment" expression
    64           | . expression_1
    65 expression_1: . expression_2 "op1" expression_1
    66             | . expression_2
@@ -1873,8 +1856,8 @@ State 101
    71             | . "uop" '(' expression ')'
    72             | . value
    73             | . '(' expression ')'
-   75 number: . "integer"
-   76       | . "float"
+   74 number: . "integer"
+   75       | . "float"
 
     "integer"  shift, and go to state 40
     "float"    shift, and go to state 41
@@ -1885,25 +1868,32 @@ State 101
     function_call  go to state 56
     value          go to state 61
     array_access   go to state 62
-    expression     go to state 118
+    expression     go to state 117
     expression_1   go to state 65
     expression_2   go to state 66
     expression_3   go to state 67
     number         go to state 68
 
 
-State 102
+State 101
 
    32 write: "write" "id" ';' .
 
     $default  reduce using rule 32 (write)
 
 
-State 103
+State 102
 
    31 read: "read" "id" ';' .
 
     $default  reduce using rule 31 (read)
+
+
+State 103
+
+   62 expression: "id" "assignment" expression .
+
+    $default  reduce using rule 62 (expression)
 
 
 State 104
@@ -1911,8 +1901,8 @@ State 104
    53 array_access: "id" '[' expression . ']'
    54             | "id" '[' expression . ',' expression ']'
 
-    ']'  shift, and go to state 119
-    ','  shift, and go to state 120
+    ']'  shift, and go to state 118
+    ','  shift, and go to state 119
 
 
 State 105
@@ -1929,8 +1919,8 @@ State 105
    52      | . function_call
    53 array_access: . "id" '[' expression ']'
    54             | . "id" '[' expression ',' expression ']'
-   62 expression: . "id" assignment expression
-   63           | . array_access assignment expression
+   62 expression: . "id" "assignment" expression
+   63           | . array_access "assignment" expression
    64           | . expression_1
    65 expression_1: . expression_2 "op1" expression_1
    66             | . expression_2
@@ -1941,8 +1931,8 @@ State 105
    71             | . "uop" '(' expression ')'
    72             | . value
    73             | . '(' expression ')'
-   75 number: . "integer"
-   76       | . "float"
+   74 number: . "integer"
+   75       | . "float"
 
     "integer"  shift, and go to state 40
     "float"    shift, and go to state 41
@@ -1953,11 +1943,11 @@ State 105
     $default  reduce using rule 36 (arguments)
 
     function_call   go to state 56
-    arguments       go to state 121
-    arguments_list  go to state 122
+    arguments       go to state 120
+    arguments_list  go to state 121
     value           go to state 61
     array_access    go to state 62
-    expression      go to state 123
+    expression      go to state 122
     expression_1    go to state 65
     expression_2    go to state 66
     expression_3    go to state 67
@@ -1966,104 +1956,97 @@ State 105
 
 State 106
 
-   62 expression: "id" assignment expression .
+   71 expression_3: "uop" '(' expression . ')'
 
-    $default  reduce using rule 62 (expression)
+    ')'  shift, and go to state 123
 
 
 State 107
-
-   71 expression_3: "uop" '(' expression . ')'
-
-    ')'  shift, and go to state 124
-
-
-State 108
 
    73 expression_3: '(' expression ')' .
 
     $default  reduce using rule 73 (expression_3)
 
 
-State 109
+State 108
 
    21 statments: '{' $@2 statments . '}'
+
+    '}'  shift, and go to state 124
+
+
+State 109
+
+   40 conditional: if '{' statments . '}' $@4 else_if
+   41            | if '{' statments . '}'
 
     '}'  shift, and go to state 125
 
 
 State 110
 
-   40 conditional: if '{' statments . '}' $@4 else_if
-   41            | if '{' statments . '}'
-
-    '}'  shift, and go to state 126
-
-
-State 111
-
    69 expression_3: value "op3" expression_3 .
 
     $default  reduce using rule 69 (expression_3)
 
 
-State 112
+State 111
 
-   63 expression: array_access assignment expression .
+   63 expression: array_access "assignment" expression .
 
     $default  reduce using rule 63 (expression)
 
 
-State 113
+State 112
 
    65 expression_1: expression_2 "op1" expression_1 .
 
     $default  reduce using rule 65 (expression_1)
 
 
-State 114
+State 113
 
    67 expression_2: expression_3 "op2" expression_2 .
 
     $default  reduce using rule 67 (expression_2)
 
 
-State 115
+State 114
 
    16 parameter: type_identifier "id" '[' ']' .
 
     $default  reduce using rule 16 (parameter)
 
 
-State 116
+State 115
 
    59 identifiers_list: "id" '[' "integer" ']' ',' identifiers_list .
 
     $default  reduce using rule 59 (identifiers_list)
 
 
-State 117
+State 116
 
    42 if: "if" '(' expression ')' .
 
     $default  reduce using rule 42 (if)
 
 
-State 118
+State 117
 
    47 loop: "while" $@6 '(' expression . ')' '{' statments '}'
 
-    ')'  shift, and go to state 127
+    ')'  shift, and go to state 126
 
 
-State 119
+State 118
 
    53 array_access: "id" '[' expression ']' .
 
     $default  reduce using rule 53 (array_access)
 
 
-State 120
+State 119
 
    34 function_call: . "id" $@3 '(' arguments ')'
    49 value: . "id"
@@ -2073,8 +2056,8 @@ State 120
    53 array_access: . "id" '[' expression ']'
    54             | . "id" '[' expression ',' expression ']'
    54             | "id" '[' expression ',' . expression ']'
-   62 expression: . "id" assignment expression
-   63           | . array_access assignment expression
+   62 expression: . "id" "assignment" expression
+   63           | . array_access "assignment" expression
    64           | . expression_1
    65 expression_1: . expression_2 "op1" expression_1
    66             | . expression_2
@@ -2085,8 +2068,8 @@ State 120
    71             | . "uop" '(' expression ')'
    72             | . value
    73             | . '(' expression ')'
-   75 number: . "integer"
-   76       | . "float"
+   74 number: . "integer"
+   75       | . "float"
 
     "integer"  shift, and go to state 40
     "float"    shift, and go to state 41
@@ -2097,52 +2080,52 @@ State 120
     function_call  go to state 56
     value          go to state 61
     array_access   go to state 62
-    expression     go to state 128
+    expression     go to state 127
     expression_1   go to state 65
     expression_2   go to state 66
     expression_3   go to state 67
     number         go to state 68
 
 
-State 121
+State 120
 
    34 function_call: "id" $@3 '(' arguments . ')'
 
-    ')'  shift, and go to state 129
+    ')'  shift, and go to state 128
 
 
-State 122
+State 121
 
    35 arguments: arguments_list .  [')']
    37 arguments_list: arguments_list . ',' expression
 
-    ','  shift, and go to state 130
+    ','  shift, and go to state 129
 
     $default  reduce using rule 35 (arguments)
 
 
-State 123
+State 122
 
    38 arguments_list: expression .
 
     $default  reduce using rule 38 (arguments_list)
 
 
-State 124
+State 123
 
    71 expression_3: "uop" '(' expression ')' .
 
     $default  reduce using rule 71 (expression_3)
 
 
-State 125
+State 124
 
    21 statments: '{' $@2 statments '}' .
 
     $default  reduce using rule 21 (statments)
 
 
-State 126
+State 125
 
    39 $@4: . %empty  ["else"]
    40 conditional: if '{' statments '}' . $@4 else_if
@@ -2151,31 +2134,31 @@ State 126
     "else"    reduce using rule 39 ($@4)
     $default  reduce using rule 41 (conditional)
 
-    $@4  go to state 131
+    $@4  go to state 130
+
+
+State 126
+
+   47 loop: "while" $@6 '(' expression ')' . '{' statments '}'
+
+    '{'  shift, and go to state 131
 
 
 State 127
 
-   47 loop: "while" $@6 '(' expression ')' . '{' statments '}'
+   54 array_access: "id" '[' expression ',' expression . ']'
 
-    '{'  shift, and go to state 132
+    ']'  shift, and go to state 132
 
 
 State 128
-
-   54 array_access: "id" '[' expression ',' expression . ']'
-
-    ']'  shift, and go to state 133
-
-
-State 129
 
    34 function_call: "id" $@3 '(' arguments ')' .
 
     $default  reduce using rule 34 (function_call)
 
 
-State 130
+State 129
 
    34 function_call: . "id" $@3 '(' arguments ')'
    37 arguments_list: arguments_list ',' . expression
@@ -2185,8 +2168,8 @@ State 130
    52      | . function_call
    53 array_access: . "id" '[' expression ']'
    54             | . "id" '[' expression ',' expression ']'
-   62 expression: . "id" assignment expression
-   63           | . array_access assignment expression
+   62 expression: . "id" "assignment" expression
+   63           | . array_access "assignment" expression
    64           | . expression_1
    65 expression_1: . expression_2 "op1" expression_1
    66             | . expression_2
@@ -2197,8 +2180,8 @@ State 130
    71             | . "uop" '(' expression ')'
    72             | . value
    73             | . '(' expression ')'
-   75 number: . "integer"
-   76       | . "float"
+   74 number: . "integer"
+   75       | . "float"
 
     "integer"  shift, and go to state 40
     "float"    shift, and go to state 41
@@ -2209,25 +2192,25 @@ State 130
     function_call  go to state 56
     value          go to state 61
     array_access   go to state 62
-    expression     go to state 134
+    expression     go to state 133
     expression_1   go to state 65
     expression_2   go to state 66
     expression_3   go to state 67
     number         go to state 68
 
 
-State 131
+State 130
 
    40 conditional: if '{' statments '}' $@4 . else_if
    43 else_if: . "else" conditional
    45        | . "else" $@5 '{' statments '}'
 
-    "else"  shift, and go to state 135
+    "else"  shift, and go to state 134
 
-    else_if  go to state 136
+    else_if  go to state 135
 
 
-State 132
+State 131
 
    17 type_identifier: . "arrayOp" "arrayType"
    18                | . "type"
@@ -2260,8 +2243,8 @@ State 132
    55 variables_declaration: . type_identifier identifiers_list ';'
    56                      | . type_identifier error ';'
    57                      | . error identifiers_list ';'
-   62 expression: . "id" assignment expression
-   63           | . array_access assignment expression
+   62 expression: . "id" "assignment" expression
+   63           | . array_access "assignment" expression
    64           | . expression_1
    65 expression_1: . expression_2 "op1" expression_1
    66             | . expression_2
@@ -2272,8 +2255,8 @@ State 132
    71             | . "uop" '(' expression ')'
    72             | . value
    73             | . '(' expression ')'
-   75 number: . "integer"
-   76       | . "float"
+   74 number: . "integer"
+   75       | . "float"
 
     error      shift, and go to state 39
     "integer"  shift, and go to state 40
@@ -2291,7 +2274,7 @@ State 132
     '{'        shift, and go to state 50
 
     type_identifier        go to state 51
-    statments              go to state 137
+    statments              go to state 136
     statment               go to state 53
     read                   go to state 54
     write                  go to state 55
@@ -2310,21 +2293,21 @@ State 132
     number                 go to state 68
 
 
-State 133
+State 132
 
    54 array_access: "id" '[' expression ',' expression ']' .
 
     $default  reduce using rule 54 (array_access)
 
 
-State 134
+State 133
 
    37 arguments_list: arguments_list ',' expression .
 
     $default  reduce using rule 37 (arguments_list)
 
 
-State 135
+State 134
 
    40 conditional: . if '{' statments '}' $@4 else_if
    41            | . if '{' statments '}'
@@ -2337,47 +2320,47 @@ State 135
 
     $default  reduce using rule 44 ($@5)
 
-    conditional  go to state 138
+    conditional  go to state 137
     if           go to state 58
-    $@5          go to state 139
+    $@5          go to state 138
 
 
-State 136
+State 135
 
    40 conditional: if '{' statments '}' $@4 else_if .
 
     $default  reduce using rule 40 (conditional)
 
 
-State 137
+State 136
 
    47 loop: "while" $@6 '(' expression ')' '{' statments . '}'
 
-    '}'  shift, and go to state 140
+    '}'  shift, and go to state 139
 
 
-State 138
+State 137
 
    43 else_if: "else" conditional .
 
     $default  reduce using rule 43 (else_if)
 
 
-State 139
+State 138
 
    45 else_if: "else" $@5 . '{' statments '}'
 
-    '{'  shift, and go to state 141
+    '{'  shift, and go to state 140
 
 
-State 140
+State 139
 
    47 loop: "while" $@6 '(' expression ')' '{' statments '}' .
 
     $default  reduce using rule 47 (loop)
 
 
-State 141
+State 140
 
    17 type_identifier: . "arrayOp" "arrayType"
    18                | . "type"
@@ -2410,8 +2393,8 @@ State 141
    55 variables_declaration: . type_identifier identifiers_list ';'
    56                      | . type_identifier error ';'
    57                      | . error identifiers_list ';'
-   62 expression: . "id" assignment expression
-   63           | . array_access assignment expression
+   62 expression: . "id" "assignment" expression
+   63           | . array_access "assignment" expression
    64           | . expression_1
    65 expression_1: . expression_2 "op1" expression_1
    66             | . expression_2
@@ -2422,8 +2405,8 @@ State 141
    71             | . "uop" '(' expression ')'
    72             | . value
    73             | . '(' expression ')'
-   75 number: . "integer"
-   76       | . "float"
+   74 number: . "integer"
+   75       | . "float"
 
     error      shift, and go to state 39
     "integer"  shift, and go to state 40
@@ -2441,7 +2424,7 @@ State 141
     '{'        shift, and go to state 50
 
     type_identifier        go to state 51
-    statments              go to state 142
+    statments              go to state 141
     statment               go to state 53
     read                   go to state 54
     write                  go to state 55
@@ -2460,14 +2443,14 @@ State 141
     number                 go to state 68
 
 
-State 142
+State 141
 
    45 else_if: "else" $@5 '{' statments . '}'
 
-    '}'  shift, and go to state 143
+    '}'  shift, and go to state 142
 
 
-State 143
+State 142
 
    45 else_if: "else" $@5 '{' statments '}' .
 

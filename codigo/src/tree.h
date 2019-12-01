@@ -16,7 +16,7 @@ struct Node {
 	NodeList *lastChild;
 	char* type;
 	char* op;
-	int line, pos;
+	int line, pos, temp;
 	DataType dType;
 };
 

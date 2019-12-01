@@ -39,7 +39,6 @@ typedef enum Rules {
 		,expression_1
 		,expression_2
 		,expression_3
-		,assignment
 		,number
 		,function_body
 		,parameters
@@ -122,7 +121,6 @@ extern int yylex_destroy();
 				,"Expression_1"
 				,"Expression_2"
 				,"Expression_3"
-				,"Assignment"
 				,"Number"
 				,"Function_body"
 				,"Parameters"
@@ -265,7 +263,6 @@ extern int yylex_destroy();
 %type <node> expression_1
 %type <node> expression_2
 %type <node> expression_3
-%type <node> assignment
 %type <node> number
 %type <node> function_body
 %type <node> parameters
@@ -554,6 +551,7 @@ statment:
 		$$ = $1;
 		root = $$;
 		myfree((void**)&$2.op);
+		tempStack = intStackPush(tempStack, $1->temp);
 	}
 	| read {
 		$$ = $1;
@@ -755,6 +753,8 @@ value:
 		$$->line = $1.line;
 		$$->type = rulesNames[value];
 		$$->op = $1.op;
+		$$->temp = tempStack->val;
+		tempStack = intStackPop(tempStack);
 
 		Symbol *onTable = stack_find($1.op, scopeStack);
 		if(!onTable){
@@ -765,12 +765,16 @@ value:
 		else{
 			lastType = onTable->type;
 			$$->dType = onTable->type;
+			fprintf(tac, "mov $%d, $%d\n", $$->temp, onTable->temp);
 		}
 	}
 	| number {
 		$$ = $1;
 		root = $$;
 		$$->dType = $1->dType;
+		$$->temp = tempStack->val;
+		tempStack = intStackPop(tempStack);
+		fprintf(tac, "mov $%d, %s\n", $$->temp, $1->op);
 	}
 	| array_access {
 		$$ = $1;
@@ -937,14 +941,15 @@ identifiers_list:
 	}
 
 expression: 
-	Id assignment expression {
+	Id '=' expression {
 		$$ = new_node();
 		root = $$;
 		$$->line = $1.line;
 		$$->type = rulesNames[expression];
 		add_tchild($$, $1.op, $1.line);
-		add_child($$, $2);
-		
+		add_tchild($$, $2.op, $2.line);
+		$$->temp = $3->temp;
+
 		Symbol *onTable = stack_find($1.op, scopeStack);
 		if(!onTable){
 			sprintf(wError + strlen(wError),"Error line %d: variable %s used but not declared\n", $1.line, $1.op);
@@ -961,15 +966,21 @@ expression:
 			else{
 				add_child($$, $3);
 			}
+			switch($2.op[0]){
+				case '=':
+					fprintf(tac, "mov $%d, $%d\n", onTable->temp, $$->temp);
+					break;
+			}
+
 		}
 		lastType = $$->dType;
 	}
-	| array_access assignment expression {
+	| array_access '=' expression {
 		$$ = new_node();
 		root = $$;
 		$$->line = $1->line;
 		add_child($$, $1);
-		add_child($$, $2);
+		add_tchild($$, $2.op, $2.line);
 		if(toBasicType($1->dType) != toBasicType($3->dType)){
 			Node *newNode = new_node();
 			newNode->type = rulesNames[toBasicType($1->dType) == dInt ? to_int : to_float];
@@ -999,6 +1010,29 @@ expression_1:
 		$$->line = $1->line;
 		convertChildrenFloat($$, $1, $2, $3);
 		$$->type = (void*)-1;
+		$$->temp = tempStack->val;
+		tempStack = intStackPop(tempStack);
+
+		switch($2.op[0]){
+			//'>'|'<'|"=="|">="|"<="|"&&"|"||"
+			case '>':
+				fprintf(tac, "%s $%d, $%d, $%d\n", $2.op[1] == '=' ? "sleq" : "slt", $$->temp, $1->temp, $3->temp);
+				break;
+			case '<':
+				fprintf(tac, "%s $%d, $%d, $%d\n", $2.op[1] == '=' ? "sleq" : "slt", $$->temp, $3->temp, $1->temp);
+				break;
+			case '=':
+				fprintf(tac, "seq $%d, $%d, $%d\n", $$->temp, $1->temp, $3->temp);
+				break;
+			case '|':
+				fprintf(tac, "or $%d, $%d, $%d\n", $$->temp, $1->temp, $3->temp);
+				break;
+			case '&':
+				fprintf(tac, "and $%d, $%d, $%d\n", $$->temp, $1->temp, $3->temp);
+				break;
+		}
+		tempStack = intStackPush(tempStack, $1->temp);
+		tempStack = intStackPush(tempStack, $3->temp);
 	}
 	| expression_2 {
 		$$ = $1;
@@ -1012,6 +1046,28 @@ expression_2:
 		$$->line = $1->line;
 		convertChildrenFloat($$, $1, $2, $3);
 		$$->type = (void*)-1;
+		$$->temp = tempStack->val;
+		tempStack = intStackPop(tempStack);
+
+		switch($2.op[0]){
+			case '+':
+				fprintf(tac, "add $%d, $%d, $%d\n", $$->temp, $1->temp, $3->temp);
+				break;
+			case '-':
+				fprintf(tac, "sub $%d, $%d, $%d\n", $$->temp, $1->temp, $3->temp);
+				break;
+			case '^':
+				fprintf(tac, "bxor $%d, $%d, $%d\n", $$->temp, $1->temp, $3->temp);
+				break;
+			case '|':
+				fprintf(tac, "bor $%d, $%d, $%d\n", $$->temp, $1->temp, $3->temp);
+				break;
+			case '&':
+				fprintf(tac, "band $%d, $%d, $%d\n", $$->temp, $1->temp, $3->temp);
+				break;
+		}
+		tempStack = intStackPush(tempStack, $1->temp);
+		tempStack = intStackPush(tempStack, $3->temp);
 	}
 	| expression_3 {
 		$$ = $1;
@@ -1024,7 +1080,20 @@ expression_3:
 		root = $$;
 		$$->line = $1->line;
 		convertChildrenFloat($$, $1, $2, $3);
-		$$->type = (void*)-1;		
+		$$->type = (void*)-1;
+		$$->temp = tempStack->val;
+		tempStack = intStackPop(tempStack);
+		
+		switch($2.op[0]){
+			case '*':
+				fprintf(tac, "mul $%d, $%d, $%d\n", $$->temp, $1->temp, $3->temp);
+				break;
+			case '/':
+				fprintf(tac, "div $%d, $%d, $%d\n", $$->temp, $1->temp, $3->temp);
+				break;
+		}
+		tempStack = intStackPush(tempStack, $1->temp);
+		tempStack = intStackPush(tempStack, $3->temp);
 	}
 	| UOp value {
 		$$ = new_node();
@@ -1049,7 +1118,6 @@ expression_3:
 	| value {
 		$$ = $1;
 		root = $$;
-		$$->dType = $1->dType;
 	}
 	| '(' expression ')' {
 		$$ = $2;
@@ -1057,16 +1125,6 @@ expression_3:
 		$$->type = (void*)-1;
 		myfree((void**)&$1.op);
 		myfree((void**)&$3.op);
-		$$->dType = $2->dType;
-	}
-
-assignment:
-	'=' {
-		$$ = new_node();
-		root = $$;
-		$$->line = $1.line;
-		$$->op = $1.op;
-		$$->type = rulesNames[assignment];
 	}
 
 number:
@@ -1093,6 +1151,8 @@ number:
 
 int main (void) {
 	tac = fopen("code.tac", "w+");
+	fprintf(tac, ".table\n");
+	fprintf(tac, ".code\n");
 	tempStack = 0;
 	scopeStack = intStackPush(scopeStack, 0);
 	argumentStack = 0;
