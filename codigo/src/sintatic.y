@@ -800,12 +800,10 @@ value:
 	| array_access {
 		$$ = $1;
 		root = $$;
-		$$->dType = $1->dType;
 	}
 	| function_call {
 		$$ = $1;
 		root = $$;
-		$$->dType = $1->dType;
 	}
 	| UOp value {
 		$$ = new_node();
@@ -994,12 +992,18 @@ expression:
 			add_child($$, $3);
 		}
 		else{
-			if(toBasicType(onTable->type) != toBasicType($3->dType)){
-				Node *newNode = new_node();
-				newNode->type = rulesNames[toBasicType(onTable->type) == dInt ? to_int : to_float];
-				add_child($$, newNode);
-				add_child(newNode, $3);
-				$$->dType = toBasicType(onTable->type);
+			if(onTable->type != $3->dType){
+				if(toBasicType(onTable->type) != onTable->type || toBasicType($3->dType) != $3->dType){
+					sprintf(wError + strlen(wError),"Error line %d: no conversion between %s and %s exists\n", $1.line, dTypeName[$3->dType], dTypeName[onTable->type]);
+					add_child($$, $3);
+				}
+				else{
+					Node *newNode = new_node();
+					newNode->type = rulesNames[toBasicType(onTable->type) == dInt ? to_int : to_float];
+					add_child($$, newNode);
+					add_child(newNode, $3);
+					$$->dType = toBasicType(onTable->type);
+				}
 			}
 			else{
 				add_child($$, $3);
@@ -1030,7 +1034,7 @@ expression:
 					break;
 				case '/':
 					fprintf(tac, "div $%d, $%d, $%d\n", $$->temp, onTable->temp, $3->temp);
-				break;
+					break;
 			}
 		}
 		if($2.op[0] != '='){
@@ -1045,12 +1049,18 @@ expression:
 		$$->line = $1->line;
 		add_child($$, $1);
 		add_tchild($$, $2.op, $2.line);
-		if(toBasicType($1->dType) != toBasicType($3->dType)){
-			Node *newNode = new_node();
-			newNode->type = rulesNames[toBasicType($1->dType) == dInt ? to_int : to_float];
-			add_child($$, newNode);
-			add_child(newNode, $3);
-			$$->dType = toBasicType($1->dType);
+		if($1->dType != $3->dType){
+			if(toBasicType($1->dType) != $1->dType || toBasicType($3->dType) != $3->dType){
+				sprintf(wError + strlen(wError),"Error line %d: no conversion between %s and %s exists\n", $1->line, dTypeName[$3->dType], dTypeName[$1->dType]);
+				add_child($$, $3);
+			}
+			else{
+				Node *newNode = new_node();
+				newNode->type = rulesNames[toBasicType($1->dType) == dInt ? to_int : to_float];
+				add_child($$, newNode);
+				add_child(newNode, $3);
+				$$->dType = toBasicType($1->dType);
+			}
 		}
 		else{
 			add_child($$, $3);
