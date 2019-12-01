@@ -36,6 +36,9 @@ int main(){
 			int e2;
 			i += 5;
 		}
+		if(1 == 1){
+			outInt x;
+		}
 		int a;
 		i += 1;
 	}

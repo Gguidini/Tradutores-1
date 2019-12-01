@@ -86,6 +86,9 @@ extern int yylex_destroy();
     IntStack *scopeStack;
     IntStack *argumentStack;
     IntStack *tempStack;
+    IntStack *labelStack;
+    IntStack *ifEndStack;
+    int labelId, ifEndId;
 
     char funcScope[34];
     DataType lastType;
@@ -162,6 +165,7 @@ extern int yylex_destroy();
 			add_child(pai, f1);
 			add_tchild(pai, op.op, op.line);
 			add_child(pai, f2);
+			pai->dType = 0;
 			return;
     	}
     	if(t1 < t2){
@@ -541,9 +545,11 @@ statment:
 		$$ = $1;
 		root = $$;
 	} 
-	| conditional {
-		$$ = $1;
+	| { ifEndStack = intStackPush(ifEndStack, ifEndId++); } conditional {
+		$$ = $2;
 		root = $$;
+		fprintf(tac, "__end%d:\n", ifEndStack->val);
+		ifEndStack = intStackPop(ifEndStack);
 	}
 	| loop {
 		$$ = $1;
@@ -665,7 +671,12 @@ arguments_list:
 	}
 
 conditional:
-	if '{' statments '}' { scopeStack = intStackPop(scopeStack); } else_if {
+	if '{' statments '}' {
+		scopeStack = intStackPop(scopeStack);
+		fprintf(tac, "jump __end%d\n", ifEndStack->val);
+		fprintf(tac, "__%d:\n", labelStack->val);
+		labelStack = intStackPop(labelStack);
+	} else_if {
 		$$ = new_node();
 		root = $$;
 		$$->line = $1->line;
@@ -686,6 +697,9 @@ conditional:
 		myfree((void**)&$4.op);
 		$$->type = rulesNames[conditional];
 		scopeStack = intStackPop(scopeStack);
+		
+		fprintf(tac, "__%d:\n", labelStack->val);
+		labelStack = intStackPop(labelStack);
 	}
 
 if:
@@ -699,6 +713,10 @@ if:
 		myfree((void**)&$4.op);
 		$$->type = rulesNames[ife];
 		scopeStack = intStackPush(scopeStack, $1.pos);
+
+		fprintf(tac, "brz __%d, $%d\n", labelId, $3->temp);
+		tempStack = intStackPush(tempStack, $3->temp);
+		labelStack = intStackPush(labelStack, labelId++);
 	}
 
 else_if:
@@ -995,17 +1013,19 @@ expression:
 				if(toBasicType(onTable->type) != onTable->type || toBasicType($3->dType) != $3->dType){
 					sprintf(wError + strlen(wError),"Error line %d: no conversion from %s to %s exists\n", $1.line, dTypeName[$3->dType], dTypeName[onTable->type]);
 					add_child($$, $3);
+					$$->dType = onTable->type;
 				}
 				else{
 					Node *newNode = new_node();
 					newNode->type = rulesNames[toBasicType(onTable->type) == dInt ? to_int : to_float];
 					add_child($$, newNode);
 					add_child(newNode, $3);
-					$$->dType = toBasicType(onTable->type);
+					$$->dType = onTable->type;
 				}
 			}
 			else{
 				add_child($$, $3);
+				$$->dType = 0;
 			}
 			switch($2.op[0]){
 				case '=':
@@ -1048,8 +1068,10 @@ expression:
 		$$->line = $1->line;
 		add_child($$, $1);
 		add_tchild($$, $2.op, $2.line);
+
 		if($1->dType != $3->dType){
 			if(toBasicType($1->dType) != $1->dType || toBasicType($3->dType) != $3->dType){
+				printf("%d\n", $3->dType);
 				sprintf(wError + strlen(wError),"Error line %d: no conversion from %s to %s exists\n", $1->line, dTypeName[$3->dType], dTypeName[$1->dType]);
 				add_child($$, $3);
 			}
@@ -1096,6 +1118,10 @@ expression_1:
 			case '=':
 				fprintf(tac, "seq $%d, $%d, $%d\n", $$->temp, $1->temp, $3->temp);
 				break;
+			case '!':
+				fprintf(tac, "seq $%d, $%d, $%d\n", $$->temp, $1->temp, $3->temp);
+				fprintf(tac, "bxor $%d, $%d, 1\n", $$->temp, $$->temp);
+				break;
 			case '|':
 				fprintf(tac, "or $%d, $%d, $%d\n", $$->temp, $1->temp, $3->temp);
 				break;
@@ -1120,7 +1146,6 @@ expression_2:
 		$$->type = (void*)-1;
 		$$->temp = tempStack->val;
 		tempStack = intStackPop(tempStack);
-
 		switch($2.op[0]){
 			case '+':
 				fprintf(tac, "add $%d, $%d, $%d\n", $$->temp, $1->temp, $3->temp);
@@ -1138,6 +1163,7 @@ expression_2:
 				fprintf(tac, "band $%d, $%d, $%d\n", $$->temp, $1->temp, $3->temp);
 				break;
 		}
+		printf("%s %s %s\n",$1->op, $2.op, $3->op);
 		tempStack = intStackPush(tempStack, $1->temp);
 		tempStack = intStackPush(tempStack, $3->temp);
 	}
@@ -1198,7 +1224,8 @@ int main (void) {
 	tac = fopen("code.tac", "w+");
 	fprintf(tac, ".table\n");
 	fprintf(tac, ".code\n");
-	tempStack = 0;
+	tempStack = labelStack = 0;
+	labelId = ifEndId = 0;
 	scopeStack = intStackPush(scopeStack, 0);
 	argumentStack = 0;
 	idList.first = idList.last = idList.firstOut = 0;
