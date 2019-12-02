@@ -6,8 +6,11 @@ int main(){
 		v[i] = i * i;
 		i += 1;
 	}
-	i = v[3];
-	outInt i;
-	i = v[6];
-	outInt i;
+	i -= 1;
+	while(i >= 0){
+		int x;
+		x = v[i & (0 - i)];
+		outInt x;
+		i -= 1;
+	}
 }

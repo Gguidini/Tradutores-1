@@ -881,9 +881,6 @@ array_access:
 			lastType = onTable->type;
 			$$->dType = toBasicType(onTable->type);
 			$$->temp = ((onTable->temp + 1) << 11) + $3->temp;
-			printf("%s\n",$3->op );
-			printf("ontable %d %d\n", onTable->temp, $3->temp);
-			printf("%d %d %d\n", $$->temp, ($$->temp >> 11) - 1, $$->temp & ((1 << 11) - 1));
 		}
 	}
 	| Id '[' expression ',' expression ']'  {
