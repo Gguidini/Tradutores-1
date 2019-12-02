@@ -832,6 +832,9 @@ value:
 	| array_access {
 		$$ = $1;
 		root = $$;
+		fprintf(tac, "mov $%d, $%d[$%d]\n", tempStack->val, ($$->temp >> 11) - 1, $$->temp & ((1 << 11) - 1));
+		$$->temp = tempStack->val;
+		tempStack = intStackPop(tempStack);
 	}
 	| function_call {
 		$$ = $1;
@@ -877,6 +880,10 @@ array_access:
 			}
 			lastType = onTable->type;
 			$$->dType = toBasicType(onTable->type);
+			$$->temp = ((onTable->temp + 1) << 11) + $3->temp;
+			printf("%s\n",$3->op );
+			printf("ontable %d %d\n", onTable->temp, $3->temp);
+			printf("%d %d %d\n", $$->temp, ($$->temp >> 11) - 1, $$->temp & ((1 << 11) - 1));
 		}
 	}
 	| Id '[' expression ',' expression ']'  {
@@ -924,6 +931,9 @@ variables_declaration:
 			else{
 				add_symbol(dType + (dType <= dFloatArray) *  idList.first->id->dType, idList.first->id->op, $1->line, $2->pos, 0, scopeStack->val, scopeStack->val != 0 ? tempStack->val : -1);
 				if(scopeStack->val != 0){
+					if(idList.first->id->dType == 2){
+						fprintf(tac, "mema $%d, %d\n", tempStack->val, idList.first->id->aux);
+					}
 					tempStack = intStackPop(tempStack);
 				}
 			}
@@ -970,6 +980,7 @@ identifiers_list:
 		root = $$;
 		$$->line = $1.line;
 		Node *id = add_tchild($$, $1.op, $1.line);
+		id->aux = atoi($3.op);
 		add_tchild($$, $2.op, $2.line);
 		add_tchild($$, $3.op, $3.line);
 		add_tchild($$, $4.op, $4.line);
@@ -986,6 +997,7 @@ identifiers_list:
 		$$->line = $1.line;
 		$$->type = (void*)-1;
 		Node *id = add_tchild($$, $1.op, $1.line);
+		id->aux = atoi($3.op);
 		add_tchild($$, $2.op, $2.line);
 		add_tchild($$, $3.op, $3.line);
 		add_tchild($$, $4.op, $4.line);
@@ -1083,6 +1095,8 @@ expression:
 		$$->line = $1->line;
 		add_child($$, $1);
 		add_tchild($$, $2.op, $2.line);
+		$$->temp = tempStack->val;
+		tempStack = intStackPop(tempStack);
 
 		if($1->dType != $3->dType){
 			if(toBasicType($1->dType) != $1->dType || toBasicType($3->dType) != $3->dType){
@@ -1099,6 +1113,38 @@ expression:
 		}
 		else{
 			add_child($$, $3);
+		}
+
+		switch($2.op[0]){
+			case '=':
+				$$->temp = $3->temp;
+				fprintf(tac, "mov $%d[$%d], $%d\n", ($1->temp >> 11) - 1, $1->temp & ((1 << 11) - 1), $3->temp);
+				break;
+			case '+':
+				fprintf(tac, "add $%d, $%d[$%d], $%d\n", $$->temp, ($1->temp >> 11) - 1, $1->temp & ((1 << 11) - 1), $3->temp);
+				break;
+			case '-':
+				fprintf(tac, "sub $%d, $%d[$%d], $%d\n", $$->temp, ($1->temp >> 11) - 1, $1->temp & ((1 << 11) - 1), $3->temp);
+				break;
+			case '^':
+				fprintf(tac, "bxor $%d, $%d[$%d], $%d\n", $$->temp, ($1->temp >> 11) - 1, $1->temp & ((1 << 11) - 1), $3->temp);
+				break;
+			case '|':
+				fprintf(tac, "bor $%d, $%d[$%d], $%d\n", $$->temp, ($1->temp >> 11) - 1, $1->temp & ((1 << 11) - 1), $3->temp);
+				break;
+			case '&':
+				fprintf(tac, "band $%d, $%d[$%d], $%d\n", $$->temp, ($1->temp >> 11) - 1, $1->temp & ((1 << 11) - 1), $3->temp);
+				break;
+			case '*':
+				fprintf(tac, "mul $%d, $%d[$%d], $%d\n", $$->temp, ($1->temp >> 11) - 1, $1->temp & ((1 << 11) - 1), $3->temp);
+				break;
+			case '/':
+				fprintf(tac, "div $%d, $%d[$%d], $%d\n", $$->temp, ($1->temp >> 11) - 1, $1->temp & ((1 << 11) - 1), $3->temp);
+				break;
+		}
+		if($2.op[0] != '='){
+			fprintf(tac, "mov $%d[$%d], $%d\n", ($1->temp >> 11) - 1, $1->temp & ((1 << 11) - 1), $$->temp);
+			tempStack = intStackPush(tempStack, $3->temp);
 		}
 		$$->type = rulesNames[expression];
 		lastType = $$->dType;
