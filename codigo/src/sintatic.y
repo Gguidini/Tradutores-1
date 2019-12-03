@@ -609,7 +609,12 @@ read:
 			}
 			else{
 				allocString(&code, &codeSz, codeOc);
-				codeOc += sprintf(code + codeOc, "%s $%d\n", $1.op[2] == 'I' ? "scani" : "scanf", temp);
+				if(temp != -1){
+					codeOc += sprintf(code + codeOc, "%s $%d\n", $1.op[2] == 'I' ? "scani" : "scanf", temp);
+				}
+				else{
+					codeOc += sprintf(code + codeOc, "%s %s\n", $1.op[2] == 'I' ? "scani" : "scanf", onTable->name);
+				}
 			}
 		}
 		myfree((void**)&$1.op);
@@ -639,14 +644,24 @@ write:
 				add_child($$, newNode);
 				add_tchild(newNode, $2.op, $2.line);
 				allocString(&code, &codeSz, codeOc);
-				codeOc += sprintf(code + codeOc, "%s $%d, $%d\n", ($1.op[3] == 'I' && onTable->type != dInt) ? "fltoint" : "inttofl", tempStack->val, temp);
+				if(temp != -1){
+					codeOc += sprintf(code + codeOc, "%s $%d, $%d\n", ($1.op[3] == 'I' && onTable->type != dInt) ? "fltoint" : "inttofl", tempStack->val, temp);
+				}
+				else{
+					codeOc += sprintf(code + codeOc, "%s $%d, %s\n", ($1.op[3] == 'I' && onTable->type != dInt) ? "fltoint" : "inttofl", tempStack->val, onTable->name);
+				}
 				temp = tempStack->val;
 			}
 			else{
 				add_tchild($$, $2.op, $2.line);
 			}
 			allocString(&code, &codeSz, codeOc);
-			codeOc += sprintf(code + codeOc, "println $%d\n", temp);
+			if(temp != -1){
+				codeOc += sprintf(code + codeOc, "println $%d\n", temp);
+			}
+			else{
+				codeOc += sprintf(code + codeOc, "println %s\n", onTable->name);
+			}
 		}
 	}
 
@@ -885,7 +900,12 @@ value:
 			lastType = onTable->type;
 			$$->dType = onTable->type;
 			allocString(&code, &codeSz, codeOc);
-			codeOc += sprintf(code + codeOc, "mov $%d, $%d\n", $$->temp, onTable->temp);
+			if(onTable->temp != -1){
+				codeOc += sprintf(code + codeOc, "mov $%d, $%d\n", $$->temp, onTable->temp);
+			}
+			else{
+				codeOc += sprintf(code + codeOc, "mov $%d, %s\n", $$->temp, onTable->name);
+			}
 		}
 	}
 	| number {
@@ -901,9 +921,17 @@ value:
 		$$ = $1;
 		root = $$;
 		allocString(&code, &codeSz, codeOc);
-		codeOc += sprintf(code + codeOc, "mov $%d, $%d[$%d]\n", tempStack->val, ($$->temp >> 11) - 1, $$->temp & ((1 << 11) - 1));
+		int oldTemp = $1->temp;
 		$$->temp = tempStack->val;
 		tempStack = intStackPop(tempStack);
+
+		if($$->temp >= (1 << 11)){
+			codeOc += sprintf(code + codeOc, "mov $%d, $%d[$%d]\n", $$->temp, (oldTemp >> 11) - 1, oldTemp & ((1 << 11) - 1));
+		}
+		else{
+			codeOc += sprintf(code + codeOc, "mov $%d, &%s\n", tempStack->val, $1->op);
+			codeOc += sprintf(code + codeOc, "mov $%d, $%d[$%d]\n", $$->temp, tempStack->val, oldTemp);
+		}
 	}
 	| function_call {
 		$$ = $1;
@@ -932,7 +960,7 @@ array_access:
 		root = $$;
 		$$->line = $1.line;
 		$$->type = rulesNames[array_access];
-		add_tchild($$, $1.op, $1.line);
+		$$->op = $1.op;
 		add_tchild($$, $2.op, $2.line);
 		add_child($$, $3);
 		add_tchild($$, $4.op, $4.line);
@@ -990,18 +1018,27 @@ variables_declaration:
 		$$->type = rulesNames[variables_declaration];
 		DataType dType = getDtype($1->op);
 		while(idList.first){
-			Symbol *onTable = find_symbol(idList.first->id->op, scopeStack->val);
+			Node *newSymbol = idList.first->id;
+			Symbol *onTable = find_symbol(newSymbol->op, scopeStack->val);
 			if(onTable){
-				sprintf(wError + strlen(wError),"Error line %d: variable %s redeclared, first occurrence on line %d\n", $1->line, idList.first->id->op, onTable->line);
+				sprintf(wError + strlen(wError),"Error line %d: variable %s redeclared, first occurrence on line %d\n", $1->line, newSymbol->op, onTable->line);
 			}
 			else{
-				add_symbol(dType + (dType <= dFloatArray) *  idList.first->id->dType, idList.first->id->op, $1->line, $2->pos, 0, scopeStack->val, scopeStack->val != 0 ? tempStack->val : -1);
+				add_symbol(dType + (dType <= dFloatArray) *  newSymbol->dType, newSymbol->op, $1->line, $2->pos, 0, scopeStack->val, scopeStack->val != 0 ? tempStack->val : -1);
 				if(scopeStack->val != 0){
-					if(idList.first->id->dType == 2){
+					if(newSymbol->dType == 2){
 						allocString(&code, &codeSz, codeOc);
-						codeOc += sprintf(code + codeOc, "mema $%d, %d\n", tempStack->val, idList.first->id->aux);
+						codeOc += sprintf(code + codeOc, "mema $%d, %d\n", tempStack->val, newSymbol->aux);
 					}
 					tempStack = intStackPop(tempStack);
+				}
+				else{
+					allocString(&table, &tableSz, tableOc);
+					tableOc += sprintf(table + tableOc, "%s %s", dTypeName[toBasicType(dType)], newSymbol->op);
+					if(newSymbol->dType == 2){
+						tableOc += sprintf(table + tableOc, "[%d]", newSymbol->aux);
+					}
+					tableOc += sprintf(table + tableOc, "\n");
 				}
 			}
 			IdItem *aux = idList.first->next;
@@ -1126,41 +1163,41 @@ expression:
 					tempStack = intStackPush(tempStack, $$->temp);
 					$$->temp = $3->temp;
 					allocString(&code, &codeSz, codeOc);
-					codeOc += sprintf(code + codeOc, "mov $%d, $%d\n", onTable->temp, $3->temp);
+					if(onTable->temp != -1){
+						codeOc += sprintf(code + codeOc, "mov $%d, $%d\n", onTable->temp, $3->temp);
+					}
+					else{
+						codeOc += sprintf(code + codeOc, "mov %s, $%d\n", onTable->name, $3->temp);
+					}
 					break;
-				case '+':
+				default:
 					allocString(&code, &codeSz, codeOc);
-					codeOc += sprintf(code + codeOc, "add $%d, $%d, $%d\n", $$->temp, onTable->temp, $3->temp);
-					break;
-				case '-':
-					allocString(&code, &codeSz, codeOc);
-					codeOc += sprintf(code + codeOc, "sub $%d, $%d, $%d\n", $$->temp, onTable->temp, $3->temp);
-					break;
-				case '^':
-					allocString(&code, &codeSz, codeOc);
-					codeOc += sprintf(code + codeOc, "bxor $%d, $%d, $%d\n", $$->temp, onTable->temp, $3->temp);
-					break;
-				case '|':
-					allocString(&code, &codeSz, codeOc);
-					codeOc += sprintf(code + codeOc, "bor $%d, $%d, $%d\n", $$->temp, onTable->temp, $3->temp);
-					break;
-				case '&':
-					allocString(&code, &codeSz, codeOc);
-					codeOc += sprintf(code + codeOc, "band $%d, $%d, $%d\n", $$->temp, onTable->temp, $3->temp);
-					break;
-				case '*':
-					allocString(&code, &codeSz, codeOc);
-					codeOc += sprintf(code + codeOc, "mul $%d, $%d, $%d\n", $$->temp, onTable->temp, $3->temp);
-					break;
-				case '/':
-					allocString(&code, &codeSz, codeOc);
-					codeOc += sprintf(code + codeOc, "div $%d, $%d, $%d\n", $$->temp, onTable->temp, $3->temp);
+					char opString[6];
+					char op = $2.op[0];
+					strcpy(opString, op == '+' ? "add" :
+									op == '-' ? "sub" :
+									op == '^' ? "bxor" :
+									op == '|' ? "bor" :
+									op == '&' ? "band" :
+									op == '*' ? "mul" :
+									"div");
+					if(onTable->temp != -1){
+						codeOc += sprintf(code + codeOc, "%s $%d, $%d, $%d\n", opString, $$->temp, onTable->temp, $3->temp);
+					}
+					else{
+						codeOc += sprintf(code + codeOc, "%s $%d, %s, $%d\n", opString, $$->temp, onTable->name, $3->temp);
+					}
 					break;
 			}
 		}
 		if($2.op[0] != '='){
 			allocString(&code, &codeSz, codeOc);
-			codeOc += sprintf(code + codeOc, "mov $%d, $%d\n", onTable->temp, $$->temp);
+			if(onTable->temp != -1){
+				codeOc += sprintf(code + codeOc, "mov $%d, $%d\n", onTable->temp, $$->temp);
+			}
+			else{
+				codeOc += sprintf(code + codeOc, "mov %s, $%d\n", onTable->name, $$->temp);
+			}
 			tempStack = intStackPush(tempStack, $3->temp);
 		}
 		lastType = $$->dType;
@@ -1195,40 +1232,43 @@ expression:
 			case '=':
 				$$->temp = $3->temp;
 				allocString(&code, &codeSz, codeOc);
-				codeOc += sprintf(code + codeOc, "mov $%d[$%d], $%d\n", ($1->temp >> 11) - 1, $1->temp & ((1 << 11) - 1), $3->temp);
+				if($1->temp >= (1 << 11)){
+					codeOc += sprintf(code + codeOc, "mov $%d[$%d], $%d\n", ($1->temp >> 11) - 1, $1->temp & ((1 << 11) - 1), $3->temp);
+				}
+				else{
+					codeOc += sprintf(code + codeOc, "mov $%d, &%s\n", tempStack->val, $1->op);
+					codeOc += sprintf(code + codeOc, "mov $%d[$%d], $%d\n", tempStack->val, $1->temp, $3->temp);
+				}
 				break;
-			case '+':
+			default:
 				allocString(&code, &codeSz, codeOc);
-				codeOc += sprintf(code + codeOc, "add $%d, $%d[$%d], $%d\n", $$->temp, ($1->temp >> 11) - 1, $1->temp & ((1 << 11) - 1), $3->temp);
-				break;
-			case '-':
-				allocString(&code, &codeSz, codeOc);
-				codeOc += sprintf(code + codeOc, "sub $%d, $%d[$%d], $%d\n", $$->temp, ($1->temp >> 11) - 1, $1->temp & ((1 << 11) - 1), $3->temp);
-				break;
-			case '^':
-				allocString(&code, &codeSz, codeOc);
-				codeOc += sprintf(code + codeOc, "bxor $%d, $%d[$%d], $%d\n", $$->temp, ($1->temp >> 11) - 1, $1->temp & ((1 << 11) - 1), $3->temp);
-				break;
-			case '|':
-				allocString(&code, &codeSz, codeOc);
-				codeOc += sprintf(code + codeOc, "bor $%d, $%d[$%d], $%d\n", $$->temp, ($1->temp >> 11) - 1, $1->temp & ((1 << 11) - 1), $3->temp);
-				break;
-			case '&':
-				allocString(&code, &codeSz, codeOc);
-				codeOc += sprintf(code + codeOc, "band $%d, $%d[$%d], $%d\n", $$->temp, ($1->temp >> 11) - 1, $1->temp & ((1 << 11) - 1), $3->temp);
-				break;
-			case '*':
-				allocString(&code, &codeSz, codeOc);
-				codeOc += sprintf(code + codeOc, "mul $%d, $%d[$%d], $%d\n", $$->temp, ($1->temp >> 11) - 1, $1->temp & ((1 << 11) - 1), $3->temp);
-				break;
-			case '/':
-				allocString(&code, &codeSz, codeOc);
-				codeOc += sprintf(code + codeOc, "div $%d, $%d[$%d], $%d\n", $$->temp, ($1->temp >> 11) - 1, $1->temp & ((1 << 11) - 1), $3->temp);
+				char opString[6];
+				char op = $2.op[0];
+				strcpy(opString, op == '+' ? "add" :
+								op == '-' ? "sub" :
+								op == '^' ? "bxor" :
+								op == '|' ? "bor" :
+								op == '&' ? "band" :
+								op == '*' ? "mul" :
+								"div");
+				if($1->temp >= (1 << 11)){
+					codeOc += sprintf(code + codeOc, "mov $%d, $%d[$%d]\n", $$->temp, ($1->temp >> 11) - 1, $1->temp & ((1 << 11) - 1));
+				}
+				else{
+					codeOc += sprintf(code + codeOc, "mov $%d, &%s\n", tempStack->val, $1->op);
+					codeOc += sprintf(code + codeOc, "mov $%d, $%d[$%d]\n", $$->temp, tempStack->val, $1->temp);
+				}
+				codeOc += sprintf(code + codeOc, "%s $%d, $%d, $%d\n", opString,$$->temp, $$->temp, $3->temp);
 				break;
 		}
 		if($2.op[0] != '='){
 			allocString(&code, &codeSz, codeOc);
-			codeOc += sprintf(code + codeOc, "mov $%d[$%d], $%d\n", ($1->temp >> 11) - 1, $1->temp & ((1 << 11) - 1), $$->temp);
+			if($1->temp >= (1 << 11)){
+				codeOc += sprintf(code + codeOc, "mov $%d[$%d], $%d\n", ($1->temp >> 11) - 1, $1->temp & ((1 << 11) - 1), $$->temp);
+			}
+			else{
+				codeOc += sprintf(code + codeOc, "mov %d[$%d], $%d\n", tempStack->val, $1->temp, $$->temp);
+			}
 			tempStack = intStackPush(tempStack, $3->temp);
 		}
 		$$->type = rulesNames[expression];
