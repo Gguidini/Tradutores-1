@@ -586,8 +586,21 @@ read:
 		$$->line = $1.line;
 		$$->type = rulesNames[readi];
 		$$->op = $2.op;
-		myfree((void**)&$1.op);
 		myfree((void**)&$3.op);
+		Symbol *onTable = stack_find($2.op, scopeStack);
+		if(!onTable){
+			sprintf(wError + strlen(wError),"Error line %d: variable %s used but not declared\n", $1.line, $1.op);
+		}
+		else{
+			int temp = onTable->temp;
+			if((onTable->type != dInt && $1.op[2] == 'I') || (onTable->type != dFloat && $1.op[2] == 'F')){
+				sprintf(wError + strlen(wError),"Error line %d: no incorrect variable type on read, expecting %s\n", $1.line, $1.op[2] == 'I' ? "int" : "float");
+			}
+			else{
+				fprintf(tac, "%s $%d\n", $1.op[2] == 'I' ? "scani" : "scanf", temp);
+			}
+		}
+		myfree((void**)&$1.op);
 	}
 
 write:
@@ -653,6 +666,11 @@ function_call:
 		}
 		argumentStack = popAllIntStackm1(argumentStack);
 		argTempStack = popAllIntStackm1(argTempStack);
+		
+		$$->temp = tempStack->val;
+		tempStack = intStackPop(tempStack);
+
+		fprintf(tac, "pop $%d\n", $$->temp);
 	}
 
 arguments:
