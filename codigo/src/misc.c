@@ -87,3 +87,13 @@ DataType getDtype(char *s){
 	}
 	return 20;
 }
+
+void allocString(char **s, int *sz, int oc){
+	if(oc + 120 > *sz){
+		char *aux = (char*)malloc((2 * (*sz) + 1) * sizeof(char));
+		strcpy(aux, *s);
+		free(*s);
+		*s = aux;
+		*sz *= 2;
+	}
+}

@@ -47,4 +47,5 @@ char dTypeName[10][20];
 DataType getDtype(char*);
 char wError[200000];
 
+void allocString(char**, int*, int);
 #endif

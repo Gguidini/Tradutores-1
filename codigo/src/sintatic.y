@@ -81,7 +81,9 @@ extern int yylex_destroy();
 }
 
 %code {
-	FILE *tac;
+	char *code, *table;
+	int codeSz, tableSz;
+	int codeOc, tableOc;
 
     IntStack *scopeStack;
     IntStack *argumentStack;
@@ -176,7 +178,8 @@ extern int yylex_destroy();
 			add_child(newNode, f1);
 			add_tchild(pai, op.op, op.line);
 			add_child(pai, f2);
-			fprintf(tac, "inttofl $%d, $%d\n", f1->temp, f1->temp);
+			allocString(&code, &codeSz, codeOc);
+			codeOc += sprintf(code + codeOc, "inttofl $%d, $%d\n", f1->temp, f1->temp);
 		}
 		else if(t1 > t2){
 			Node *newNode = new_node();
@@ -185,7 +188,8 @@ extern int yylex_destroy();
 			add_tchild(pai, op.op, op.line);
 			add_child(pai, newNode);
 			add_child(newNode, f2);
-			fprintf(tac, "inttofl $%d, $%d\n", f2->temp, f2->temp);
+			allocString(&code, &codeSz, codeOc);
+			codeOc += sprintf(code + codeOc, "inttofl $%d, $%d\n", f2->temp, f2->temp);
 		}
 		else{
 			add_child(pai, f1);
@@ -212,10 +216,12 @@ extern int yylex_destroy();
 			}
 			else{
 				sprintf(wError + strlen(wError),"Warning line %d: converting %s to %s on call to %s\n", line, dTypeName[arguments->val], dTypeName[parameters->val], func->name );
-				fprintf(tac, "%s $%d, $%d\n", parameters->val == dFloat ? "inttofl" : "fltoint", argTemp->val, argTemp->val);
+				allocString(&code, &codeSz, codeOc);
+				codeOc += sprintf(code + codeOc, "%s $%d, $%d\n", parameters->val == dFloat ? "inttofl" : "fltoint", argTemp->val, argTemp->val);
 			}
 		}
-		fprintf(tac, "param $%d\n", argTemp->val);
+		allocString(&code, &codeSz, codeOc);
+		codeOc += sprintf(code + codeOc, "param $%d\n", argTemp->val);
 		tempStack = intStackPush(tempStack, argTemp->val);
 		paramNum++;
 		return 1;
@@ -392,7 +398,8 @@ function_declaration:
 			add_symbol(getDtype($1->op), $2.op, $2.line, $2.pos, 1, 0, 0);
 			funcType = getDtype($1->op);
 		}
-		fprintf(tac, "%s:\n", $2.op);
+		allocString(&code, &codeSz, codeOc);
+		codeOc += sprintf(code + codeOc, "%s:\n", $2.op);
 
 		$$->type = rulesNames[function_declaration];
 
@@ -418,7 +425,8 @@ function_body:
 		$$->type = rulesNames[function_body];
 
 		if(hasturn == 0 && strcmp(funcScope, "main")){
-			fprintf(tac, "return %s\n", funcType == dFloat ? "0.0" : "0");
+			allocString(&code, &codeSz, codeOc);
+			codeOc += sprintf(code + codeOc, "return %s\n", funcType == dFloat ? "0.0" : "0");
 		}
 	}
 
@@ -471,7 +479,8 @@ parameter:
 		}
 		else{
 			add_symbol(getDtype($1->op), $2.op, $2.line, $2.pos, 0, scopeStack->val, tempStack->val);
-			fprintf(tac, "mov $%d, #%d\n", tempStack->val, paramNum);
+			allocString(&code, &codeSz, codeOc);
+			codeOc += sprintf(code + codeOc, "mov $%d, #%d\n", tempStack->val, paramNum);
 			tempStack = intStackPop(tempStack);
 			add_parameter(find_symbol(funcScope, 0), getDtype($1->op));
 		}
@@ -491,8 +500,9 @@ parameter:
 		}
 		else{
 			add_symbol(getDtype($1->op) + (getDtype($1->op) <= dFloatArray) * 2, $2.op, $2.line, $2.pos, 0, scopeStack->val, tempStack->val);
+			allocString(&code, &codeSz, codeOc);
+			codeOc += sprintf(code + codeOc, "mov $%d, #%d\n", tempStack->val, paramNum);
 			tempStack = intStackPop(tempStack);
-			fprintf(tac, "mov $%d, #%d\n", tempStack->val, paramNum);
 			add_parameter(find_symbol(funcScope, 0), getDtype($1->op) + (getDtype($1->op) <= dFloatArray) * 2);
 		}
 		add_tchild($$, $3.op, $3.line);
@@ -557,7 +567,8 @@ statment:
 	| { ifEndStack = intStackPush(ifEndStack, ifEndId++); } conditional {
 		$$ = $2;
 		root = $$;
-		fprintf(tac, "__end%d:\n", ifEndStack->val);
+		allocString(&code, &codeSz, codeOc);
+		codeOc += sprintf(code + codeOc, "__end%d:\n", ifEndStack->val);
 		ifEndStack = intStackPop(ifEndStack);
 	}
 	| loop {
@@ -597,7 +608,8 @@ read:
 				sprintf(wError + strlen(wError),"Error line %d: no incorrect variable type on read, expecting %s\n", $1.line, $1.op[2] == 'I' ? "int" : "float");
 			}
 			else{
-				fprintf(tac, "%s $%d\n", $1.op[2] == 'I' ? "scani" : "scanf", temp);
+				allocString(&code, &codeSz, codeOc);
+				codeOc += sprintf(code + codeOc, "%s $%d\n", $1.op[2] == 'I' ? "scani" : "scanf", temp);
 			}
 		}
 		myfree((void**)&$1.op);
@@ -626,13 +638,15 @@ write:
 				newNode->type = rulesNames[($1.op[3] == 'I' && onTable->type != dInt) ? to_int : to_float];
 				add_child($$, newNode);
 				add_tchild(newNode, $2.op, $2.line);
-				fprintf(tac, "%s $%d, $%d\n", ($1.op[3] == 'I' && onTable->type != dInt) ? "fltoint" : "inttofl", tempStack->val, temp);
+				allocString(&code, &codeSz, codeOc);
+				codeOc += sprintf(code + codeOc, "%s $%d, $%d\n", ($1.op[3] == 'I' && onTable->type != dInt) ? "fltoint" : "inttofl", tempStack->val, temp);
 				temp = tempStack->val;
 			}
 			else{
 				add_tchild($$, $2.op, $2.line);
 			}
-			fprintf(tac, "println $%d\n", temp);
+			allocString(&code, &codeSz, codeOc);
+			codeOc += sprintf(code + codeOc, "println $%d\n", temp);
 		}
 	}
 
@@ -659,7 +673,8 @@ function_call:
 				sprintf(wError + strlen(wError),"Error line %d: function %s used with wrong number of arguments\n", $1.line, $1.op);
 			}
 			else{
-				fprintf(tac, "call %s, %d\n", $1.op, paramNum);
+				allocString(&code, &codeSz, codeOc);
+				codeOc += sprintf(code + codeOc, "call %s, %d\n", $1.op, paramNum);
 			}
 			lastType = onTable->type;
 			$$->dType = onTable->type;
@@ -670,7 +685,8 @@ function_call:
 		$$->temp = tempStack->val;
 		tempStack = intStackPop(tempStack);
 
-		fprintf(tac, "pop $%d\n", $$->temp);
+		allocString(&code, &codeSz, codeOc);
+		codeOc += sprintf(code + codeOc, "pop $%d\n", $$->temp);
 	}
 
 arguments:
@@ -707,8 +723,10 @@ arguments_list:
 conditional:
 	if '{' statments '}' {
 		scopeStack = intStackPop(scopeStack);
-		fprintf(tac, "jump __end%d\n", ifEndStack->val);
-		fprintf(tac, "__%d:\n", labelStack->val);
+		allocString(&code, &codeSz, codeOc);
+		codeOc += sprintf(code + codeOc, "jump __end%d\n", ifEndStack->val);
+		allocString(&code, &codeSz, codeOc);
+		codeOc += sprintf(code + codeOc, "__%d:\n", labelStack->val);
 		labelStack = intStackPop(labelStack);
 	} else_if {
 		$$ = new_node();
@@ -732,7 +750,8 @@ conditional:
 		$$->type = rulesNames[conditional];
 		scopeStack = intStackPop(scopeStack);
 		
-		fprintf(tac, "__%d:\n", labelStack->val);
+		allocString(&code, &codeSz, codeOc);
+		codeOc += sprintf(code + codeOc, "__%d:\n", labelStack->val);
 		labelStack = intStackPop(labelStack);
 	}
 
@@ -748,7 +767,8 @@ if:
 		$$->type = rulesNames[ife];
 		scopeStack = intStackPush(scopeStack, $1.pos);
 
-		fprintf(tac, "brz __%d, $%d\n", labelId, $3->temp);
+		allocString(&code, &codeSz, codeOc);
+		codeOc += sprintf(code + codeOc, "brz __%d, $%d\n", labelId, $3->temp);
 		tempStack = intStackPush(tempStack, $3->temp);
 		labelStack = intStackPush(labelStack, labelId++);
 	}
@@ -777,10 +797,12 @@ else_if:
 loop:
 	While {
 		scopeStack = intStackPush(scopeStack, $1.pos);
-		fprintf(tac, "__%d:\n", labelId);
+		allocString(&code, &codeSz, codeOc);
+		codeOc += sprintf(code + codeOc, "__%d:\n", labelId);
 		labelStack = intStackPush(labelStack, labelId++);
 	} '(' expression ')' {
-		fprintf(tac, "brz __%d, $%d\n", labelId, $4->temp);
+		allocString(&code, &codeSz, codeOc);
+		codeOc += sprintf(code + codeOc, "brz __%d, $%d\n", labelId, $4->temp);
 		labelStack = intStackPush(labelStack, labelId++);
 		tempStack = intStackPush(tempStack, $4->temp);
 	}
@@ -800,9 +822,11 @@ loop:
 
 		int endLabel = labelStack->val;
 		labelStack = intStackPop(labelStack);
-		fprintf(tac, "jump __%d\n", labelStack->val);
+		allocString(&code, &codeSz, codeOc);
+		codeOc += sprintf(code + codeOc, "jump __%d\n", labelStack->val);
 		labelStack = intStackPop(labelStack);
-		fprintf(tac, "__%d:\n", endLabel);
+		allocString(&code, &codeSz, codeOc);
+		codeOc += sprintf(code + codeOc, "__%d:\n", endLabel);
 	}
 
 retrn:
@@ -823,7 +847,8 @@ retrn:
 				add_child(newNode, $2);
 				$$->dType = toBasicType(funcType);
 				if(strcmp(funcScope, "main")){
-					fprintf(tac, "%s $%d, $%d\n", funcType == dInt ? "fltoint" : "inttofl", $2->temp, $2->temp);
+					allocString(&code, &codeSz, codeOc);
+					codeOc += sprintf(code + codeOc, "%s $%d, $%d\n", funcType == dInt ? "fltoint" : "inttofl", $2->temp, $2->temp);
 				}
 			}
 		}
@@ -833,7 +858,8 @@ retrn:
 		myfree((void**)&$3.op);
 		$$->type = rulesNames[retrn];
 		if(strcmp(funcScope, "main")){
-			fprintf(tac, "return $%d\n", $2->temp);
+			allocString(&code, &codeSz, codeOc);
+			codeOc += sprintf(code + codeOc, "return $%d\n", $2->temp);
 		}
 		tempStack = intStackPush(tempStack, $2->temp);
 		hasturn |= find_symbol(funcScope, 0)->scope == scopeStack->val;
@@ -858,7 +884,8 @@ value:
 		else{
 			lastType = onTable->type;
 			$$->dType = onTable->type;
-			fprintf(tac, "mov $%d, $%d\n", $$->temp, onTable->temp);
+			allocString(&code, &codeSz, codeOc);
+			codeOc += sprintf(code + codeOc, "mov $%d, $%d\n", $$->temp, onTable->temp);
 		}
 	}
 	| number {
@@ -867,12 +894,14 @@ value:
 		$$->dType = $1->dType;
 		$$->temp = tempStack->val;
 		tempStack = intStackPop(tempStack);
-		fprintf(tac, "mov $%d, %s\n", $$->temp, $1->op);
+		allocString(&code, &codeSz, codeOc);
+		codeOc += sprintf(code + codeOc, "mov $%d, %s\n", $$->temp, $1->op);
 	}
 	| array_access {
 		$$ = $1;
 		root = $$;
-		fprintf(tac, "mov $%d, $%d[$%d]\n", tempStack->val, ($$->temp >> 11) - 1, $$->temp & ((1 << 11) - 1));
+		allocString(&code, &codeSz, codeOc);
+		codeOc += sprintf(code + codeOc, "mov $%d, $%d[$%d]\n", tempStack->val, ($$->temp >> 11) - 1, $$->temp & ((1 << 11) - 1));
 		$$->temp = tempStack->val;
 		tempStack = intStackPop(tempStack);
 	}
@@ -969,7 +998,8 @@ variables_declaration:
 				add_symbol(dType + (dType <= dFloatArray) *  idList.first->id->dType, idList.first->id->op, $1->line, $2->pos, 0, scopeStack->val, scopeStack->val != 0 ? tempStack->val : -1);
 				if(scopeStack->val != 0){
 					if(idList.first->id->dType == 2){
-						fprintf(tac, "mema $%d, %d\n", tempStack->val, idList.first->id->aux);
+						allocString(&code, &codeSz, codeOc);
+						codeOc += sprintf(code + codeOc, "mema $%d, %d\n", tempStack->val, idList.first->id->aux);
 					}
 					tempStack = intStackPop(tempStack);
 				}
@@ -1095,33 +1125,42 @@ expression:
 				case '=':
 					tempStack = intStackPush(tempStack, $$->temp);
 					$$->temp = $3->temp;
-					fprintf(tac, "mov $%d, $%d\n", onTable->temp, $3->temp);
+					allocString(&code, &codeSz, codeOc);
+					codeOc += sprintf(code + codeOc, "mov $%d, $%d\n", onTable->temp, $3->temp);
 					break;
 				case '+':
-					fprintf(tac, "add $%d, $%d, $%d\n", $$->temp, onTable->temp, $3->temp);
+					allocString(&code, &codeSz, codeOc);
+					codeOc += sprintf(code + codeOc, "add $%d, $%d, $%d\n", $$->temp, onTable->temp, $3->temp);
 					break;
 				case '-':
-					fprintf(tac, "sub $%d, $%d, $%d\n", $$->temp, onTable->temp, $3->temp);
+					allocString(&code, &codeSz, codeOc);
+					codeOc += sprintf(code + codeOc, "sub $%d, $%d, $%d\n", $$->temp, onTable->temp, $3->temp);
 					break;
 				case '^':
-					fprintf(tac, "bxor $%d, $%d, $%d\n", $$->temp, onTable->temp, $3->temp);
+					allocString(&code, &codeSz, codeOc);
+					codeOc += sprintf(code + codeOc, "bxor $%d, $%d, $%d\n", $$->temp, onTable->temp, $3->temp);
 					break;
 				case '|':
-					fprintf(tac, "bor $%d, $%d, $%d\n", $$->temp, onTable->temp, $3->temp);
+					allocString(&code, &codeSz, codeOc);
+					codeOc += sprintf(code + codeOc, "bor $%d, $%d, $%d\n", $$->temp, onTable->temp, $3->temp);
 					break;
 				case '&':
-					fprintf(tac, "band $%d, $%d, $%d\n", $$->temp, onTable->temp, $3->temp);
+					allocString(&code, &codeSz, codeOc);
+					codeOc += sprintf(code + codeOc, "band $%d, $%d, $%d\n", $$->temp, onTable->temp, $3->temp);
 					break;
 				case '*':
-					fprintf(tac, "mul $%d, $%d, $%d\n", $$->temp, onTable->temp, $3->temp);
+					allocString(&code, &codeSz, codeOc);
+					codeOc += sprintf(code + codeOc, "mul $%d, $%d, $%d\n", $$->temp, onTable->temp, $3->temp);
 					break;
 				case '/':
-					fprintf(tac, "div $%d, $%d, $%d\n", $$->temp, onTable->temp, $3->temp);
+					allocString(&code, &codeSz, codeOc);
+					codeOc += sprintf(code + codeOc, "div $%d, $%d, $%d\n", $$->temp, onTable->temp, $3->temp);
 					break;
 			}
 		}
 		if($2.op[0] != '='){
-			fprintf(tac, "mov $%d, $%d\n", onTable->temp, $$->temp);
+			allocString(&code, &codeSz, codeOc);
+			codeOc += sprintf(code + codeOc, "mov $%d, $%d\n", onTable->temp, $$->temp);
 			tempStack = intStackPush(tempStack, $3->temp);
 		}
 		lastType = $$->dType;
@@ -1155,32 +1194,41 @@ expression:
 		switch($2.op[0]){
 			case '=':
 				$$->temp = $3->temp;
-				fprintf(tac, "mov $%d[$%d], $%d\n", ($1->temp >> 11) - 1, $1->temp & ((1 << 11) - 1), $3->temp);
+				allocString(&code, &codeSz, codeOc);
+				codeOc += sprintf(code + codeOc, "mov $%d[$%d], $%d\n", ($1->temp >> 11) - 1, $1->temp & ((1 << 11) - 1), $3->temp);
 				break;
 			case '+':
-				fprintf(tac, "add $%d, $%d[$%d], $%d\n", $$->temp, ($1->temp >> 11) - 1, $1->temp & ((1 << 11) - 1), $3->temp);
+				allocString(&code, &codeSz, codeOc);
+				codeOc += sprintf(code + codeOc, "add $%d, $%d[$%d], $%d\n", $$->temp, ($1->temp >> 11) - 1, $1->temp & ((1 << 11) - 1), $3->temp);
 				break;
 			case '-':
-				fprintf(tac, "sub $%d, $%d[$%d], $%d\n", $$->temp, ($1->temp >> 11) - 1, $1->temp & ((1 << 11) - 1), $3->temp);
+				allocString(&code, &codeSz, codeOc);
+				codeOc += sprintf(code + codeOc, "sub $%d, $%d[$%d], $%d\n", $$->temp, ($1->temp >> 11) - 1, $1->temp & ((1 << 11) - 1), $3->temp);
 				break;
 			case '^':
-				fprintf(tac, "bxor $%d, $%d[$%d], $%d\n", $$->temp, ($1->temp >> 11) - 1, $1->temp & ((1 << 11) - 1), $3->temp);
+				allocString(&code, &codeSz, codeOc);
+				codeOc += sprintf(code + codeOc, "bxor $%d, $%d[$%d], $%d\n", $$->temp, ($1->temp >> 11) - 1, $1->temp & ((1 << 11) - 1), $3->temp);
 				break;
 			case '|':
-				fprintf(tac, "bor $%d, $%d[$%d], $%d\n", $$->temp, ($1->temp >> 11) - 1, $1->temp & ((1 << 11) - 1), $3->temp);
+				allocString(&code, &codeSz, codeOc);
+				codeOc += sprintf(code + codeOc, "bor $%d, $%d[$%d], $%d\n", $$->temp, ($1->temp >> 11) - 1, $1->temp & ((1 << 11) - 1), $3->temp);
 				break;
 			case '&':
-				fprintf(tac, "band $%d, $%d[$%d], $%d\n", $$->temp, ($1->temp >> 11) - 1, $1->temp & ((1 << 11) - 1), $3->temp);
+				allocString(&code, &codeSz, codeOc);
+				codeOc += sprintf(code + codeOc, "band $%d, $%d[$%d], $%d\n", $$->temp, ($1->temp >> 11) - 1, $1->temp & ((1 << 11) - 1), $3->temp);
 				break;
 			case '*':
-				fprintf(tac, "mul $%d, $%d[$%d], $%d\n", $$->temp, ($1->temp >> 11) - 1, $1->temp & ((1 << 11) - 1), $3->temp);
+				allocString(&code, &codeSz, codeOc);
+				codeOc += sprintf(code + codeOc, "mul $%d, $%d[$%d], $%d\n", $$->temp, ($1->temp >> 11) - 1, $1->temp & ((1 << 11) - 1), $3->temp);
 				break;
 			case '/':
-				fprintf(tac, "div $%d, $%d[$%d], $%d\n", $$->temp, ($1->temp >> 11) - 1, $1->temp & ((1 << 11) - 1), $3->temp);
+				allocString(&code, &codeSz, codeOc);
+				codeOc += sprintf(code + codeOc, "div $%d, $%d[$%d], $%d\n", $$->temp, ($1->temp >> 11) - 1, $1->temp & ((1 << 11) - 1), $3->temp);
 				break;
 		}
 		if($2.op[0] != '='){
-			fprintf(tac, "mov $%d[$%d], $%d\n", ($1->temp >> 11) - 1, $1->temp & ((1 << 11) - 1), $$->temp);
+			allocString(&code, &codeSz, codeOc);
+			codeOc += sprintf(code + codeOc, "mov $%d[$%d], $%d\n", ($1->temp >> 11) - 1, $1->temp & ((1 << 11) - 1), $$->temp);
 			tempStack = intStackPush(tempStack, $3->temp);
 		}
 		$$->type = rulesNames[expression];
@@ -1207,23 +1255,30 @@ expression_1:
 
 		switch($2.op[0]){
 			case '<':
-				fprintf(tac, "%s $%d, $%d, $%d\n", $2.op[1] == '=' ? "sleq" : "slt", $$->temp, $1->temp, $3->temp);
+				allocString(&code, &codeSz, codeOc);
+				codeOc += sprintf(code + codeOc, "%s $%d, $%d, $%d\n", $2.op[1] == '=' ? "sleq" : "slt", $$->temp, $1->temp, $3->temp);
 				break;
 			case '>':
-				fprintf(tac, "%s $%d, $%d, $%d\n", $2.op[1] == '=' ? "sleq" : "slt", $$->temp, $3->temp, $1->temp);
+				allocString(&code, &codeSz, codeOc);
+				codeOc += sprintf(code + codeOc, "%s $%d, $%d, $%d\n", $2.op[1] == '=' ? "sleq" : "slt", $$->temp, $3->temp, $1->temp);
 				break;
 			case '=':
-				fprintf(tac, "seq $%d, $%d, $%d\n", $$->temp, $1->temp, $3->temp);
+				allocString(&code, &codeSz, codeOc);
+				codeOc += sprintf(code + codeOc, "seq $%d, $%d, $%d\n", $$->temp, $1->temp, $3->temp);
 				break;
 			case '!':
-				fprintf(tac, "seq $%d, $%d, $%d\n", $$->temp, $1->temp, $3->temp);
-				fprintf(tac, "bxor $%d, $%d, 1\n", $$->temp, $$->temp);
+				allocString(&code, &codeSz, codeOc);
+				codeOc += sprintf(code + codeOc, "seq $%d, $%d, $%d\n", $$->temp, $1->temp, $3->temp);
+				allocString(&code, &codeSz, codeOc);
+				codeOc += sprintf(code + codeOc, "bxor $%d, $%d, 1\n", $$->temp, $$->temp);
 				break;
 			case '|':
-				fprintf(tac, "or $%d, $%d, $%d\n", $$->temp, $1->temp, $3->temp);
+				allocString(&code, &codeSz, codeOc);
+				codeOc += sprintf(code + codeOc, "or $%d, $%d, $%d\n", $$->temp, $1->temp, $3->temp);
 				break;
 			case '&':
-				fprintf(tac, "and $%d, $%d, $%d\n", $$->temp, $1->temp, $3->temp);
+				allocString(&code, &codeSz, codeOc);
+				codeOc += sprintf(code + codeOc, "and $%d, $%d, $%d\n", $$->temp, $1->temp, $3->temp);
 				break;
 		}
 		tempStack = intStackPush(tempStack, $1->temp);
@@ -1245,19 +1300,24 @@ expression_2:
 		tempStack = intStackPop(tempStack);
 		switch($2.op[0]){
 			case '+':
-				fprintf(tac, "add $%d, $%d, $%d\n", $$->temp, $1->temp, $3->temp);
+				allocString(&code, &codeSz, codeOc);
+				codeOc += sprintf(code + codeOc, "add $%d, $%d, $%d\n", $$->temp, $1->temp, $3->temp);
 				break;
 			case '-':
-				fprintf(tac, "sub $%d, $%d, $%d\n", $$->temp, $1->temp, $3->temp);
+				allocString(&code, &codeSz, codeOc);
+				codeOc += sprintf(code + codeOc, "sub $%d, $%d, $%d\n", $$->temp, $1->temp, $3->temp);
 				break;
 			case '^':
-				fprintf(tac, "bxor $%d, $%d, $%d\n", $$->temp, $1->temp, $3->temp);
+				allocString(&code, &codeSz, codeOc);
+				codeOc += sprintf(code + codeOc, "bxor $%d, $%d, $%d\n", $$->temp, $1->temp, $3->temp);
 				break;
 			case '|':
-				fprintf(tac, "bor $%d, $%d, $%d\n", $$->temp, $1->temp, $3->temp);
+				allocString(&code, &codeSz, codeOc);
+				codeOc += sprintf(code + codeOc, "bor $%d, $%d, $%d\n", $$->temp, $1->temp, $3->temp);
 				break;
 			case '&':
-				fprintf(tac, "band $%d, $%d, $%d\n", $$->temp, $1->temp, $3->temp);
+				allocString(&code, &codeSz, codeOc);
+				codeOc += sprintf(code + codeOc, "band $%d, $%d, $%d\n", $$->temp, $1->temp, $3->temp);
 				break;
 		}
 		tempStack = intStackPush(tempStack, $1->temp);
@@ -1280,10 +1340,12 @@ expression_3:
 		
 		switch($2.op[0]){
 			case '*':
-				fprintf(tac, "mul $%d, $%d, $%d\n", $$->temp, $1->temp, $3->temp);
+				allocString(&code, &codeSz, codeOc);
+				codeOc += sprintf(code + codeOc, "mul $%d, $%d, $%d\n", $$->temp, $1->temp, $3->temp);
 				break;
 			case '/':
-				fprintf(tac, "div $%d, $%d, $%d\n", $$->temp, $1->temp, $3->temp);
+				allocString(&code, &codeSz, codeOc);
+				codeOc += sprintf(code + codeOc, "div $%d, $%d, $%d\n", $$->temp, $1->temp, $3->temp);
 				break;
 		}
 		tempStack = intStackPush(tempStack, $1->temp);
@@ -1317,9 +1379,13 @@ number:
 %%
 
 int main (void) {
-	tac = fopen("code.tac", "w+");
-	fprintf(tac, ".table\n");
-	fprintf(tac, ".code\n");
+	code = (char*)malloc(2001 * sizeof(char));
+	codeSz = 2000;
+	table = (char*)malloc(201 * sizeof(char));
+	tableSz = 201;
+	codeOc = tableOc = 0;
+	tableOc += sprintf(table + tableOc, ".table\n");
+	codeOc += sprintf(code + codeOc, ".code\n");
 	tempStack = labelStack = 0;
 	labelId = ifEndId = 0;
 	scopeStack = intStackPush(scopeStack, 0);
@@ -1341,8 +1407,16 @@ int main (void) {
 	popAllIntStack(&scopeStack);
 
 	printf("\n");
-	printf("%s\n",wError );
+	printf("%s\n", wError);
 
-	fprintf(tac, "nop\n");
+	allocString(&code, &codeSz, codeOc);
+	codeOc += sprintf(code + codeOc, "nop\n");
+
+	FILE *tac;
+	tac = fopen("code.tac", "w+");
+	fprintf(tac, "%s", table);
+	fprintf(tac, "%s", code);
 	fclose(tac);
+	free(code);
+	free(table);
 }
