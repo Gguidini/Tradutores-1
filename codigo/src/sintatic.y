@@ -85,12 +85,13 @@ extern int yylex_destroy();
 
     IntStack *scopeStack;
     IntStack *argumentStack;
+    IntStack *argTempStack;
     IntStack *tempStack;
     IntStack *labelStack;
     IntStack *ifEndStack;
     int labelId, ifEndId;
 
-    char funcScope[34];
+    char* funcScope;
     DataType lastType;
     int needSize = 0;
     DataType funcType = 0;
@@ -184,7 +185,7 @@ extern int yylex_destroy();
 			add_tchild(pai, op.op, op.line);
 			add_child(pai, newNode);
 			add_child(newNode, f2);
-			fprintf(tac, "inttofl $%d, $%d\n", f1->temp, f1->temp);
+			fprintf(tac, "inttofl $%d, $%d\n", f2->temp, f2->temp);
 		}
 		else{
 			add_child(pai, f1);
@@ -194,22 +195,30 @@ extern int yylex_destroy();
 		pai->dType = t1 >= t2 ? t1 : t2;
     }
 
-    int check_arguments(IntStack *parameters, IntStack *arguments, Symbol *func, int line){
+    int check_arguments(IntStack *parameters, IntStack *arguments, IntStack* argTemp, Symbol *func, int line){
 		if(parameters == 0 && (arguments == 0 || arguments->val == -1)){
 			return 1;
 		}
 		if(parameters == 0 || arguments == 0 || arguments->val == -1){
 			return 0;
 		}
+		if(!check_arguments(parameters->prev, arguments->prev, argTemp->prev, func, line)){
+			return 0;
+		}
+
 		if(parameters->val != arguments->val){
 			if(toBasicType(arguments->val) != arguments->val || toBasicType(parameters->val) != parameters->val){
 				sprintf(wError + strlen(wError),"Error line %d: no conversion from %s to %s exists\n", line, dTypeName[arguments->val], dTypeName[parameters->val]);
 			}
 			else{
-				sprintf(wError + strlen(wError),"Warning line %d: not converting %s to %s on call to %s\n", line, dTypeName[arguments->val], dTypeName[parameters->val], func->name );
+				sprintf(wError + strlen(wError),"Warning line %d: converting %s to %s on call to %s\n", line, dTypeName[arguments->val], dTypeName[parameters->val], func->name );
+				fprintf(tac, "%s $%d, $%d\n", parameters->val == dFloat ? "inttofl" : "fltoint", argTemp->val, argTemp->val);
 			}
 		}
-		return check_arguments(parameters->prev, arguments->prev, func, line);
+		fprintf(tac, "param $%d\n", argTemp->val);
+		tempStack = intStackPush(tempStack, argTemp->val);
+		paramNum++;
+		return 1;
 	}
 
 
@@ -330,7 +339,7 @@ function_definition:
 	}
 	| error {
 		scopeStack = intStackPush(scopeStack, -2);
-		funcScope[0] = 0;
+		funcScope = 0;
 		hasturn = 0;
 		paramNum = 0;
 		
@@ -388,7 +397,7 @@ function_declaration:
 		$$->type = rulesNames[function_declaration];
 
 		scopeStack = intStackPush(scopeStack, $2.pos);
-		strcpy(funcScope, $2.op);
+		funcScope = $2.op;
 		hasturn = 0;
 		paramNum = 0;
 		
@@ -408,8 +417,8 @@ function_body:
 		myfree((void**)&$3.op);
 		$$->type = rulesNames[function_body];
 
-		if(hasturn != 0){
-
+		if(hasturn == 0 && strcmp(funcScope, "main")){
+			fprintf(tac, "return %s\n", funcType == dFloat ? "0.0" : "0");
 		}
 	}
 
@@ -615,7 +624,7 @@ write:
 	}
 
 function_call:
-	Id { argumentStack = intStackPush(argumentStack, -1); } '(' arguments ')'  {
+	Id { argumentStack = intStackPush(argumentStack, -1); argTempStack = intStackPush(argTempStack, -1); } '(' arguments ')'  {
 		$$ = new_node();
 		root = $$;
 		$$->line = $1.line;
@@ -624,6 +633,7 @@ function_call:
 		add_child($$, $4);
 		myfree((void**)&$5.op);
 		$$->type = rulesNames[function_call];
+		paramNum = 0;
 
 		Symbol *onTable = find_symbol($1.op, 0);
 		if(!onTable){
@@ -632,13 +642,17 @@ function_call:
 			$$->dType = 0;
 		}
 		else{
-			if(!check_arguments(onTable->parameters, argumentStack, onTable, $1.line)){
+			if(!check_arguments(onTable->parameters, argumentStack, argTempStack, onTable, $1.line)){
 				sprintf(wError + strlen(wError),"Error line %d: function %s used with wrong number of arguments\n", $1.line, $1.op);
+			}
+			else{
+				fprintf(tac, "call %s, %d\n", $1.op, paramNum);
 			}
 			lastType = onTable->type;
 			$$->dType = onTable->type;
 		}
 		argumentStack = popAllIntStackm1(argumentStack);
+		argTempStack = popAllIntStackm1(argTempStack);
 	}
 
 arguments:
@@ -662,12 +676,14 @@ arguments_list:
 		add_child($$, $3);
 		$$->type = (void*)-1;
 		argumentStack = intStackPush(argumentStack, lastType);
+		argTempStack = intStackPush(argTempStack, $3->temp);
 	}
 	| expression {
 		$$ = $1;
 		root = $$;
 
 		argumentStack = intStackPush(argumentStack, lastType);
+		argTempStack = intStackPush(argTempStack, $1->temp);
 	}
 
 conditional:
@@ -784,10 +800,13 @@ retrn:
 			}
 			else{
 				Node *newNode = new_node();
-				newNode->type = rulesNames[toBasicType(funcType) == dInt ? to_int : to_float];
+				newNode->type = rulesNames[funcType == dInt ? to_int : to_float];
 				add_child($$, newNode);
 				add_child(newNode, $2);
 				$$->dType = toBasicType(funcType);
+				if(strcmp(funcScope, "main")){
+					fprintf(tac, "%s $%d, $%d\n", funcType == dInt ? "fltoint" : "inttofl", $2->temp, $2->temp);
+				}
 			}
 		}
 		else{
@@ -795,7 +814,10 @@ retrn:
 		}
 		myfree((void**)&$3.op);
 		$$->type = rulesNames[retrn];
-
+		if(strcmp(funcScope, "main")){
+			fprintf(tac, "return $%d\n", $2->temp);
+		}
+		tempStack = intStackPush(tempStack, $2->temp);
 		hasturn |= find_symbol(funcScope, 0)->scope == scopeStack->val;
 	}
 
@@ -1283,7 +1305,7 @@ int main (void) {
 	tempStack = labelStack = 0;
 	labelId = ifEndId = 0;
 	scopeStack = intStackPush(scopeStack, 0);
-	argumentStack = 0;
+	argumentStack = argTempStack = 0;
 	idList.first = idList.last = idList.firstOut = 0;
 	root = 0;
 
