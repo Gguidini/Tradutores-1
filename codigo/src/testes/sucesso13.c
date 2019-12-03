@@ -30,6 +30,15 @@ MaxArray<int> printArray(int v[], int n){
 	}
 }
 
+int a, b;
+
+int gcd(int a, int b){
+	if(b == 0){
+		return a;
+	}
+	return gcd(b, a - (a / b * b));
+}
+
 int main(){
 	int x;
 	inInt x;
@@ -38,7 +47,7 @@ int main(){
 	outInt y;
 	y = fexp(2, x);
 	outInt y;
-	int v[10], i;
+	int v[50], i;
 	i = 0;
 	while(i < x){
 		v[i] = i * i;
@@ -46,4 +55,12 @@ int main(){
 	}
 	printArray(v, x);
 	printArray(v, x);
+
+	a = x;
+	b = 4;
+	a += b;
+
+	a = gcd(a, b);
+
+	outInt a;
 }

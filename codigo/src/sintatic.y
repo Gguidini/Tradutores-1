@@ -925,7 +925,7 @@ value:
 		$$->temp = tempStack->val;
 		tempStack = intStackPop(tempStack);
 
-		if($$->temp >= (1 << 11)){
+		if(oldTemp >= (1 << 11)){
 			codeOc += sprintf(code + codeOc, "mov $%d, $%d[$%d]\n", $$->temp, (oldTemp >> 11) - 1, oldTemp & ((1 << 11) - 1));
 		}
 		else{
