@@ -84,6 +84,9 @@ extern int yylex_destroy();
 	char *code, *table;
 	int codeSz, tableSz;
 	int codeOc, tableOc;
+	int sumTempMax[1030];
+	int sumTempMin[1030];
+	int sumTempLazy[1030];
 
     IntStack *scopeStack;
     IntStack *argumentStack;
@@ -223,10 +226,23 @@ extern int yylex_destroy();
 		allocString(&code, &codeSz, codeOc);
 		codeOc += sprintf(code + codeOc, "param $%d\n", argTemp->val);
 		tempStack = intStackPush(tempStack, argTemp->val);
+		printf("?????? %d\n", argTemp->val);
 		paramNum++;
 		return 1;
 	}
 
+	void initSegtree(){
+		codeOc += sprintf(code + codeOc, " ___prop: \n  mov $0, #0 \n  mov $1, #1 \n  mov $2, #2 \n  mov $3, #3 \n  mov $4, #4 \n  mov $5, #5 \n  mov $6, #6 \n  mov $7, $4 \n  mov $8, $3[$7] \n  brz ___0, $8 \n  mov $8, $4 \n  mov $9, $4 \n  mov $10, $3[$9] \n  mov $11, $6 \n  mov $12, $5 \n  sub $13, $11, $12 \n  mov $12, 1 \n  add $11, $13, $12 \n  mul $12, $10, $11 \n  mov $11, $0[$8] \n  add $11, $11, $12 \n  mov $0[$8], $11 \n  mov $11, $4 \n  mov $12, $4 \n  mov $10, $3[$12] \n  mov $13, $1[$11] \n  add $13, $13, $10 \n  mov $1[$11], $13 \n  mov $13, $4 \n  mov $10, $4 \n  mov $14, $3[$10] \n  mov $15, $2[$13] \n  add $15, $15, $14 \n  mov $2[$13], $15 \n  mov $15, $5 \n  mov $14, $6 \n  seq $16, $15, $14 \n  bxor $16, $16, 1 \n  brz ___1, $16 \n  mov $16, 2 \n  mov $14, $4 \n  mul $15, $16, $14 \n  mov $14, $4 \n  mov $16, $3[$14] \n  mov $17, $3[$15] \n  add $17, $17, $16 \n  mov $3[$15], $17 \n  mov $17, 2 \n  mov $16, $4 \n  mul $18, $17, $16 \n  mov $16, 1 \n  add $17, $18, $16 \n  mov $16, $4 \n  mov $18, $3[$16] \n  mov $19, $3[$17] \n  add $19, $19, $18 \n  mov $3[$17], $19 \n  ___1: \n  ___end1: \n  mov $19, $4 \n  mov $18, 0 \n  mov $3[$19], $18 \n  ___0: \n  ___end0: \n return 0 \n ___querysum: \n  mov $0, #0 \n  mov $1, #1 \n  mov $2, #2 \n  mov $3, #3 \n  mov $4, #4 \n  mov $5, #5 \n  mov $6, #6 \n  mov $7, #7 \n  mov $8, #8 \n  mov $9, $0 \n  mov $10, $1 \n  mov $11, $2 \n  mov $12, $3 \n  mov $13, $4 \n  mov $14, $5 \n  mov $15, $6 \n  param $9 \n  param $10 \n  param $11 \n  param $12 \n  param $13 \n  param $14 \n  param $15 \n  \n call ___prop, 7 \n pop $15 \n  mov $15, $5 \n  mov $14, $7 \n  sleq $13, $14, $15 \n  mov $14, $6 \n  mov $15, $8 \n  sleq $12, $14, $15 \n  and $15, $13, $12 \n  brz ___2, $15 \n  mov $15, $4 \n  mov $12, $0[$15] \n  return $12 \n  ___2: \n  ___end2: \n  mov $12, $7 \n  mov $13, $6 \n  sleq $14, $12, $13 \n  mov $13, $8 \n  mov $12, $5 \n  sleq $11, $12, $13 \n  and $12, $14, $11 \n  brz ___3, $12 \n  mov $11, $5 \n  mov $14, $6 \n  add $13, $11, $14 \n  mov $14, 2 \n  div $11, $13, $14 \n  mov $12, $11 \n  mov $11, $0 \n  mov $14, $1 \n  mov $13, $2 \n  mov $10, $3 \n  mov $9, 2 \n  mov $16, $4 \n  mul $17, $9, $16 \n  mov $16, $5 \n  mov $9, $12 \n  mov $18, $7 \n  mov $19, $8 \n  param $11 \n  param $14 \n  param $13 \n  param $10 \n  param $17 \n  param $16 \n  param $9 \n  param $18 \n  param $19 \n  \n call ___querysum, 9 \n pop $19 \n  mov $18, $0 \n  mov $9, $1 \n  mov $16, $2 \n  mov $17, $3 \n  mov $10, 2 \n  mov $13, $4 \n  mul $14, $10, $13 \n  mov $13, 1 \n  add $10, $14, $13 \n  mov $13, $12 \n  mov $14, 1 \n  add $11, $13, $14 \n  mov $14, $6 \n  mov $13, $7 \n  mov $20, $8 \n  param $18 \n  param $9 \n  param $16 \n  param $17 \n  param $10 \n  param $11 \n  param $14 \n  param $13 \n  param $20 \n  \n call ___querysum, 9 \n pop $20 \n  add $13, $19, $20 \n  return $13 \n  ___3: \n  ___end3: \n return 0 \n ___querymin: \n  mov $0, #0 \n  mov $1, #1 \n  mov $2, #2 \n  mov $3, #3 \n  mov $4, #4 \n  mov $5, #5 \n  mov $6, #6 \n  mov $7, #7 \n  mov $8, #8 \n  mov $9, $0 \n  mov $10, $1 \n  mov $11, $2 \n  mov $12, $3 \n  mov $13, $4 \n  mov $14, $5 \n  mov $15, $6 \n  param $9 \n  param $10 \n  param $11 \n  param $12 \n  param $13 \n  param $14 \n  param $15 \n  \n call ___prop, 7 \n pop $15 \n  mov $15, $5 \n  mov $14, $7 \n  sleq $13, $14, $15 \n  mov $14, $6 \n  mov $15, $8 \n  sleq $12, $14, $15 \n  and $15, $13, $12 \n  brz ___4, $15 \n  mov $15, $4 \n  mov $12, $0[$15] \n  return $12 \n  ___4: \n  ___end4: \n  mov $12, $7 \n  mov $13, $6 \n  sleq $14, $12, $13 \n  mov $13, $8 \n  mov $12, $5 \n  sleq $11, $12, $13 \n  and $12, $14, $11 \n  brz ___5, $12 \n  mov $11, $5 \n  mov $14, $6 \n  add $13, $11, $14 \n  mov $14, 2 \n  div $11, $13, $14 \n  mov $12, $11 \n  mov $11, $0 \n  mov $14, $1 \n  mov $13, $2 \n  mov $10, $3 \n  mov $9, 2 \n  mov $16, $4 \n  mul $17, $9, $16 \n  mov $16, $5 \n  mov $9, $12 \n  mov $18, $7 \n  mov $19, $8 \n  param $11 \n  param $14 \n  param $13 \n  param $10 \n  param $17 \n  param $16 \n  param $9 \n  param $18 \n  param $19 \n  \n call ___querymin, 9 \n pop $19 \n  mov $18, $0 \n  mov $9, $1 \n  mov $16, $2 \n  mov $17, $3 \n  mov $10, 2 \n  mov $13, $4 \n  mul $14, $10, $13 \n  mov $13, 1 \n  add $10, $14, $13 \n  mov $13, $12 \n  mov $14, 1 \n  add $11, $13, $14 \n  mov $14, $6 \n  mov $13, $7 \n  mov $20, $8 \n  param $18 \n  param $9 \n  param $16 \n  param $17 \n  param $10 \n  param $11 \n  param $14 \n  param $13 \n  param $20 \n  \n call ___querymin, 9 \n pop $20 \n  add $13, $19, $20 \n  return $13 \n  ___5: \n  ___end5: \n return 0 \n ___querymax: \n  mov $0, #0 \n  mov $1, #1 \n  mov $2, #2 \n  mov $3, #3 \n  mov $4, #4 \n  mov $5, #5 \n  mov $6, #6 \n  mov $7, #7 \n  mov $8, #8 \n  mov $9, $0 \n  mov $10, $1 \n  mov $11, $2 \n  mov $12, $3 \n  mov $13, $4 \n  mov $14, $5 \n  mov $15, $6 \n  param $9 \n  param $10 \n  param $11 \n  param $12 \n  param $13 \n  param $14 \n  param $15 \n  \n call ___prop, 7 \n pop $15 \n  mov $15, $5 \n  mov $14, $7 \n  sleq $13, $14, $15 \n  mov $14, $6 \n  mov $15, $8 \n  sleq $12, $14, $15 \n  and $15, $13, $12 \n  brz ___6, $15 \n  mov $15, $4 \n  mov $12, $0[$15] \n  return $12 \n  ___6: \n  ___end6: \n  mov $12, $7 \n  mov $13, $6 \n  sleq $14, $12, $13 \n  mov $13, $8 \n  mov $12, $5 \n  sleq $11, $12, $13 \n  and $12, $14, $11 \n  brz ___7, $12 \n  mov $11, $5 \n  mov $14, $6 \n  add $13, $11, $14 \n  mov $14, 2 \n  div $11, $13, $14 \n  mov $12, $11 \n  mov $11, $0 \n  mov $14, $1 \n  mov $13, $2 \n  mov $10, $3 \n  mov $9, 2 \n  mov $16, $4 \n  mul $17, $9, $16 \n  mov $16, $5 \n  mov $9, $12 \n  mov $18, $7 \n  mov $19, $8 \n  param $11 \n  param $14 \n  param $13 \n  param $10 \n  param $17 \n  param $16 \n  param $9 \n  param $18 \n  param $19 \n  \n call ___querymax, 9 \n pop $19 \n  mov $18, $0 \n  mov $9, $1 \n  mov $16, $2 \n  mov $17, $3 \n  mov $10, 2 \n  mov $13, $4 \n  mul $14, $10, $13 \n  mov $13, 1 \n  add $10, $14, $13 \n  mov $13, $12 \n  mov $14, 1 \n  add $11, $13, $14 \n  mov $14, $6 \n  mov $13, $7 \n  mov $20, $8 \n  param $18 \n  param $9 \n  param $16 \n  param $17 \n  param $10 \n  param $11 \n  param $14 \n  param $13 \n  param $20 \n  \n call ___querymax, 9 \n pop $20 \n  add $13, $19, $20 \n  return $13 \n  ___7: \n  ___end7: \n return 0 \n ___upd: \n  mov $0, #0 \n  mov $1, #1 \n  mov $2, #2 \n  mov $3, #3 \n  mov $4, #4 \n  mov $5, #5 \n  mov $6, #6 \n  mov $7, #7 \n  mov $8, #8 \n  mov $9, #9 \n  mov $10, $0 \n  mov $11, $1 \n  mov $12, $2 \n  mov $13, $3 \n  mov $14, $4 \n  mov $15, $5 \n  mov $16, $6 \n  param $10 \n  param $11 \n  param $12 \n  param $13 \n  param $14 \n  param $15 \n  param $16 \n  \n call ___prop, 7 \n pop $16 \n  mov $16, $7 \n  mov $15, $6 \n  slt $14, $15, $16 \n  mov $15, $8 \n  mov $16, $5 \n  slt $13, $15, $16 \n  or $16, $14, $13 \n  brz ___8, $16 \n  mov $16, 0 \n  return $16 \n  ___8: \n  ___end8: \n  mov $16, $5 \n  mov $13, $7 \n  sleq $14, $13, $16 \n  mov $13, $6 \n  mov $16, $8 \n  sleq $15, $13, $16 \n  and $16, $14, $15 \n  brz ___9, $16 \n  mov $16, $4 \n  mov $15, $9 \n  mov $3[$16], $15 \n  mov $15, $0 \n  mov $13, $1 \n  mov $12, $2 \n  mov $11, $3 \n  mov $10, $4 \n  mov $17, $5 \n  mov $18, $6 \n  param $15 \n  param $13 \n  param $12 \n  param $11 \n  param $10 \n  param $17 \n  param $18 \n  \n call ___prop, 7 \n pop $18 \n  mov $18, $4 \n  mov $17, $0[$18] \n  return $17 \n  ___9: \n  ___end9: \n  mov $10, $5 \n  mov $11, $6 \n  add $12, $10, $11 \n  mov $11, 2 \n  div $10, $12, $11 \n  mov $17, $10 \n  mov $10, $0 \n  mov $11, $1 \n  mov $12, $2 \n  mov $13, $3 \n  mov $15, 2 \n  mov $19, $4 \n  mul $20, $15, $19 \n  mov $19, $5 \n  mov $15, $17 \n  mov $21, $7 \n  mov $22, $8 \n  mov $23, $9 \n  param $10 \n  param $11 \n  param $12 \n  param $13 \n  param $20 \n  param $19 \n  param $15 \n  param $21 \n  param $22 \n  param $23 \n  \n call ___upd, 10 \n pop $23 \n  mov $22, $0 \n  mov $21, $1 \n  mov $15, $2 \n  mov $19, $3 \n  mov $20, 2 \n  mov $13, $4 \n  mul $12, $20, $13 \n  mov $13, 1 \n  add $20, $12, $13 \n  mov $13, $17 \n  mov $12, 1 \n  add $11, $13, $12 \n  mov $12, $6 \n  mov $13, $7 \n  mov $10, $8 \n  mov $24, $9 \n  param $22 \n  param $21 \n  param $15 \n  param $19 \n  param $20 \n  param $11 \n  param $12 \n  param $13 \n  param $10 \n  param $24 \n call ___upd, 10 \n pop $24 \n  add $10, $23, $24 \n  mov $10, $4 \n  mov $24, 2 \n  mov $23, $4 \n  mul $13, $24, $23 \n  mov $23, $0[$13] \n  mov $24, 2 \n  mov $12, $4 \n  mul $11, $24, $12 \n  mov $12, 1 \n  add $24, $11, $12 \n  mov $12, $0[$24] \n  add $11, $23, $12 \n  mov $0[$10], $11 \n return 0 \n \n nop \n");
+	}
+
+	void zera(int ant, int sz){
+		codeOc += sprintf(code + codeOc, "mov $%d, %d\n", tempStack->val, sz);
+		labelStack = intStackPush(labelStack, labelId++);
+		codeOc += sprintf(code + codeOc, "__zera%d:\n", labelStack->val);
+		codeOc += sprintf(code + codeOc, "mov $%d[$%d], 0\n", ant, tempStack->val);
+		codeOc += sprintf(code + codeOc, "sub $%d, $%d, 1\n", tempStack->val, tempStack->val);
+		codeOc += sprintf(code + codeOc, "brnz __zera%d, $%d\n", labelStack->val, tempStack->val);
+	}
 
 	void yyerror (char const *s) {
 		sprintf(wError + strlen(wError), "Error line %d: %s\n", root != 0 ? root->line : 1, s);
@@ -354,6 +370,7 @@ function_definition:
 		popAllIntStack(&tempStack);
 		for(int i = 1023; i >= 0; i--){
 			tempStack = intStackPush(tempStack, i);
+			printf("WE@@E@E@E@ %d\n", i);
 		}
 	} parameters function_body {
 		$$ = new_node();
@@ -397,7 +414,7 @@ function_declaration:
 			sprintf(wError + strlen(wError),"Error line %d: function %s redeclared, first occurrence on line %d\n", $1->line, $2.op, onTable->line);
 		}
 		else{
-			add_symbol(getDtype($1->op), $2.op, $2.line, $2.pos, 1, 0, 0);
+			add_symbol(getDtype($1->op), $2.op, $2.line, $2.pos, 1, 0, 0, 0);
 			funcType = getDtype($1->op);
 		}
 		allocString(&code, &codeSz, codeOc);
@@ -480,7 +497,7 @@ parameter:
 			sprintf(wError + strlen(wError),"Error line %d: variable %s redeclared, first occurrence on line %d\n", $1->line, $2.op, onTable->line);
 		}
 		else{
-			add_symbol(getDtype($1->op), $2.op, $2.line, $2.pos, 0, scopeStack->val, tempStack->val);
+			add_symbol(getDtype($1->op), $2.op, $2.line, $2.pos, 0, scopeStack->val, tempStack->val, 0);
 			allocString(&code, &codeSz, codeOc);
 			codeOc += sprintf(code + codeOc, "mov $%d, #%d\n", tempStack->val, paramNum);
 			tempStack = intStackPop(tempStack);
@@ -501,7 +518,7 @@ parameter:
 			sprintf(wError + strlen(wError),"Error line %d: variable %s redeclared, first occurrence on line %d\n", $1->line, $2.op, onTable->line);
 		}
 		else{
-			add_symbol(getDtype($1->op) + (getDtype($1->op) <= dFloatArray) * 2, $2.op, $2.line, $2.pos, 0, scopeStack->val, tempStack->val);
+			add_symbol(getDtype($1->op) + (getDtype($1->op) <= dFloatArray) * 2, $2.op, $2.line, $2.pos, 0, scopeStack->val, tempStack->val, 0);
 			allocString(&code, &codeSz, codeOc);
 			codeOc += sprintf(code + codeOc, "mov $%d, #%d\n", tempStack->val, paramNum);
 			tempStack = intStackPop(tempStack);
@@ -582,6 +599,7 @@ statment:
 		root = $$;
 		myfree((void**)&$2.op);
 		tempStack = intStackPush(tempStack, $1->temp);
+		printf("A nao %d\n", $1->temp);
 	}
 	| read {
 		$$ = $1;
@@ -914,6 +932,7 @@ value:
 		$$ = $1;
 		root = $$;
 		$$->dType = $1->dType;
+		printf("QQQQQQQ %d\n", tempStack->val);
 		$$->temp = tempStack->val;
 		tempStack = intStackPop(tempStack);
 		allocString(&code, &codeSz, codeOc);
@@ -923,11 +942,18 @@ value:
 		$$ = $1;
 		root = $$;
 		allocString(&code, &codeSz, codeOc);
+		$$->dType = toBasicType($$->dType);
 		int oldTemp = $1->temp;
 		$$->temp = tempStack->val;
 		tempStack = intStackPop(tempStack);
-
-		if(oldTemp >= (1 << 11)){
+		if(lastType > dFloatArray){
+			char qry[10];
+			strcpy(qry, (lastType == dSumArrayI || lastType == dSumArrayF) ? "___querysum" :
+							(lastType == dMaxArrayI || lastType == dMaxArrayF) ? "___querymax" : "___querymin");
+			codeOc += sprintf(code + codeOc, "call %s, 9\n", qry);
+			codeOc += sprintf(code + codeOc, "pop $%d\n", $$->temp);
+		}
+		else if(oldTemp >= (1 << 11)){
 			codeOc += sprintf(code + codeOc, "mov $%d, $%d[$%d]\n", $$->temp, (oldTemp >> 11) - 1, oldTemp & ((1 << 11) - 1));
 		}
 		else{
@@ -1003,10 +1029,25 @@ array_access:
 		else{
 			if(onTable->type <= dFloatArray){
 				sprintf(wError + strlen(wError),"Error line %d: variable %s is not an operation array\n", $1.line, $1.op);
+			}else{
+				allocString(&code, &codeSz, codeOc);
+
+				int sumTemp = onTable->temp;
+				codeOc += sprintf(code + codeOc, "param $%d\n", sumTemp);
+				codeOc += sprintf(code + codeOc, "param $%d\n", sumTempMin[sumTemp]);
+				codeOc += sprintf(code + codeOc, "param $%d\n", sumTempMax[sumTemp]);
+				codeOc += sprintf(code + codeOc, "param $%d\n", sumTempLazy[sumTemp]);
+				codeOc += sprintf(code + codeOc, "param 1\n");
+				codeOc += sprintf(code + codeOc, "param 0\n");
+				codeOc += sprintf(code + codeOc, "param %d\n", onTable->sz-1);
+				codeOc += sprintf(code + codeOc, "param $%d\n", $3->temp);
+				codeOc += sprintf(code + codeOc, "param $%d\n", $5->temp);
+				lastType = onTable->type;
+				$$->dType = onTable->type;
 			}
-			lastType = onTable->type;
-			$$->dType = toBasicType(onTable->type);
 		}
+		tempStack = intStackPush(tempStack, $3->temp);
+		tempStack = intStackPush(tempStack, $5->temp);
 	}
 
 variables_declaration:
@@ -1026,11 +1067,37 @@ variables_declaration:
 				sprintf(wError + strlen(wError),"Error line %d: variable %s redeclared, first occurrence on line %d\n", $1->line, newSymbol->op, onTable->line);
 			}
 			else{
-				add_symbol(dType + (dType <= dFloatArray) *  newSymbol->dType, newSymbol->op, $1->line, $2->pos, 0, scopeStack->val, scopeStack->val != 0 ? tempStack->val : -1);
+				add_symbol(dType + (dType <= dFloatArray) *  newSymbol->dType, newSymbol->op, $1->line, $2->pos, 0, scopeStack->val, scopeStack->val != 0 ? tempStack->val : -1, newSymbol->aux);
 				if(scopeStack->val != 0){
 					if(newSymbol->dType == 2){
 						allocString(&code, &codeSz, codeOc);
-						codeOc += sprintf(code + codeOc, "mema $%d, %d\n", tempStack->val, newSymbol->aux);
+						if(dType <= dFloatArray){
+							codeOc += sprintf(code + codeOc, "mema $%d, %d\n", tempStack->val, newSymbol->aux);
+						}
+						else{
+							int sumTemp = tempStack->val, ant = tempStack->val;
+							codeOc += sprintf(code + codeOc, "mema $%d, %d\n", tempStack->val, newSymbol->aux * 4); // sum
+							tempStack = intStackPop(tempStack);
+							zera(ant, newSymbol->aux * 4 - 1);
+
+							ant = tempStack->val;
+							sumTempMin[sumTemp] = tempStack->val;
+							codeOc += sprintf(code + codeOc, "mema $%d, %d\n", tempStack->val, newSymbol->aux * 4); // min
+							tempStack = intStackPop(tempStack);
+							zera(ant, newSymbol->aux * 4 - 1);
+							
+							ant = tempStack->val;
+							sumTempMax[sumTemp] = tempStack->val;
+							codeOc += sprintf(code + codeOc, "mema $%d, %d\n", tempStack->val, newSymbol->aux * 4); // max
+							tempStack = intStackPop(tempStack);
+							zera(ant, newSymbol->aux * 4 - 1);
+					
+							ant = tempStack->val;
+							sumTempLazy[sumTemp] = tempStack->val;
+							codeOc += sprintf(code + codeOc, "mema $%d, %d\n", tempStack->val, newSymbol->aux * 4); // lazy
+							tempStack = intStackPop(tempStack);
+							zera(ant, newSymbol->aux * 4 - 1);
+						}
 					}
 					tempStack = intStackPop(tempStack);
 				}
@@ -1169,7 +1236,6 @@ expression:
 						codeOc += sprintf(code + codeOc, "mov $%d, $%d\n", onTable->temp, $3->temp);
 					}
 					else{
-						printf("Nome do vetor %s\n", onTable->name);
 						codeOc += sprintf(code + codeOc, "mov %s, $%d\n", onTable->name, $3->temp);
 					}
 					break;
@@ -1199,7 +1265,6 @@ expression:
 				codeOc += sprintf(code + codeOc, "mov $%d, $%d\n", onTable->temp, $$->temp);
 			}
 			else{
-				printf("Nome do vetor %s\n", onTable->name);
 				codeOc += sprintf(code + codeOc, "mov %s, $%d\n", onTable->name, $$->temp);
 			}
 			tempStack = intStackPush(tempStack, $3->temp);
@@ -1212,69 +1277,80 @@ expression:
 		$$->line = $1->line;
 		add_child($$, $1);
 		add_tchild($$, $2.op, $2.line);
-		$$->temp = tempStack->val;
-		tempStack = intStackPop(tempStack);
-
-		if($1->dType != $3->dType){
-			if(toBasicType($1->dType) != $1->dType || toBasicType($3->dType) != $3->dType){
-				sprintf(wError + strlen(wError),"Error line %d: no conversion from %s to %s exists\n", $1->line, dTypeName[$3->dType], dTypeName[$1->dType]);
-				add_child($$, $3);
-			}
-			else{
-				Node *newNode = new_node();
-				newNode->type = rulesNames[toBasicType($1->dType) == dInt ? to_int : to_float];
-				add_child($$, newNode);
-				add_child(newNode, $3);
-				$$->dType = toBasicType($1->dType);
-			}
+		if($1->dType > dFloatArray){
+			allocString(&code, &codeSz, codeOc);
+			codeOc += sprintf(code + codeOc, "param $%d\n", $3->temp);
+			codeOc += sprintf(code + codeOc, "call ___upd, 10\n");
+			printf("sss %d\n", tempStack->val);
+			$$->temp = $3->temp;
 		}
 		else{
-			add_child($$, $3);
-		}
+			$$->temp = tempStack->val;
+			tempStack = intStackPop(tempStack);
 
-		switch($2.op[0]){
-			case '=':
-				$$->temp = $3->temp;
-				allocString(&code, &codeSz, codeOc);
-				if($1->temp >= (1 << 11)){
-					codeOc += sprintf(code + codeOc, "mov $%d[$%d], $%d\n", ($1->temp >> 11) - 1, $1->temp & ((1 << 11) - 1), $3->temp);
+			if($1->dType != $3->dType){
+				if(toBasicType($1->dType) != $1->dType || toBasicType($3->dType) != $3->dType){
+					sprintf(wError + strlen(wError),"Error line %d: no conversion from %s to %s exists\n", $1->line, dTypeName[$3->dType], dTypeName[$1->dType]);
+					add_child($$, $3);
 				}
 				else{
-					codeOc += sprintf(code + codeOc, "mov $%d, &%s\n", tempStack->val, $1->op);
-					codeOc += sprintf(code + codeOc, "mov $%d[$%d], $%d\n", tempStack->val, $1->temp, $3->temp);
+					Node *newNode = new_node();
+					newNode->type = rulesNames[toBasicType($1->dType) == dInt ? to_int : to_float];
+					add_child($$, newNode);
+					add_child(newNode, $3);
+					$$->dType = toBasicType($1->dType);
 				}
-				break;
-			default:
-				allocString(&code, &codeSz, codeOc);
-				char opString[6];
-				char op = $2.op[0];
-				strcpy(opString, op == '+' ? "add" :
-								op == '-' ? "sub" :
-								op == '^' ? "bxor" :
-								op == '|' ? "bor" :
-								op == '&' ? "band" :
-								op == '*' ? "mul" :
-								"div");
-				if($1->temp >= (1 << 11)){
-					codeOc += sprintf(code + codeOc, "mov $%d, $%d[$%d]\n", $$->temp, ($1->temp >> 11) - 1, $1->temp & ((1 << 11) - 1));
-				}
-				else{
-					codeOc += sprintf(code + codeOc, "mov $%d, &%s\n", tempStack->val, $1->op);
-					codeOc += sprintf(code + codeOc, "mov $%d, $%d[$%d]\n", $$->temp, tempStack->val, $1->temp);
-				}
-				codeOc += sprintf(code + codeOc, "%s $%d, $%d, $%d\n", opString,$$->temp, $$->temp, $3->temp);
-				break;
-		}
-		if($2.op[0] != '='){
-			allocString(&code, &codeSz, codeOc);
-			if($1->temp >= (1 << 11)){
-				codeOc += sprintf(code + codeOc, "mov $%d[$%d], $%d\n", ($1->temp >> 11) - 1, $1->temp & ((1 << 11) - 1), $$->temp);
 			}
 			else{
-				codeOc += sprintf(code + codeOc, "mov $%d[$%d], $%d\n", tempStack->val, $1->temp, $$->temp);
+				add_child($$, $3);
 			}
-			tempStack = intStackPush(tempStack, $3->temp);
+
+			switch($2.op[0]){
+				case '=':
+					$$->temp = $3->temp;
+					allocString(&code, &codeSz, codeOc);
+					if($1->temp >= (1 << 11)){
+						codeOc += sprintf(code + codeOc, "mov $%d[$%d], $%d\n", ($1->temp >> 11) - 1, $1->temp & ((1 << 11) - 1), $3->temp);
+					}
+					else{
+						codeOc += sprintf(code + codeOc, "mov $%d, &%s\n", tempStack->val, $1->op);
+						codeOc += sprintf(code + codeOc, "mov $%d[$%d], $%d\n", tempStack->val, $1->temp, $3->temp);
+					}
+					break;
+				default:
+					allocString(&code, &codeSz, codeOc);
+					char opString[6];
+					char op = $2.op[0];
+					strcpy(opString, op == '+' ? "add" :
+									op == '-' ? "sub" :
+									op == '^' ? "bxor" :
+									op == '|' ? "bor" :
+									op == '&' ? "band" :
+									op == '*' ? "mul" :
+									"div");
+					if($1->temp >= (1 << 11)){
+						codeOc += sprintf(code + codeOc, "mov $%d, $%d[$%d]\n", $$->temp, ($1->temp >> 11) - 1, $1->temp & ((1 << 11) - 1));
+					}
+					else{
+						codeOc += sprintf(code + codeOc, "mov $%d, &%s\n", tempStack->val, $1->op);
+						codeOc += sprintf(code + codeOc, "mov $%d, $%d[$%d]\n", $$->temp, tempStack->val, $1->temp);
+					}
+					codeOc += sprintf(code + codeOc, "%s $%d, $%d, $%d\n", opString,$$->temp, $$->temp, $3->temp);
+					break;
+			}
+			if($2.op[0] != '='){
+				allocString(&code, &codeSz, codeOc);
+				if($1->temp >= (1 << 11)){
+					codeOc += sprintf(code + codeOc, "mov $%d[$%d], $%d\n", ($1->temp >> 11) - 1, $1->temp & ((1 << 11) - 1), $$->temp);
+				}
+				else{
+					codeOc += sprintf(code + codeOc, "mov $%d[$%d], $%d\n", tempStack->val, $1->temp, $$->temp);
+				}
+				tempStack = intStackPush(tempStack, $3->temp);
+				printf("!! %d\n",$1->temp);
+			}
 		}
+		printf("aaa %d\n", tempStack->val);
 		$$->type = rulesNames[expression];
 		lastType = $$->dType;
 	}
@@ -1308,7 +1384,9 @@ expression_0:
 				break;
 		}
 		tempStack = intStackPush(tempStack, $1->temp);
+		printf("!! %d\n",$1->temp);
 		tempStack = intStackPush(tempStack, $3->temp);
+		printf("!! %d\n",$1->temp);
 	}
 	| expression_1 {
 		$$ = $1;
@@ -1346,7 +1424,9 @@ expression_1:
 				break;
 		}
 		tempStack = intStackPush(tempStack, $1->temp);
+		printf("!! %d\n",$1->temp);
 		tempStack = intStackPush(tempStack, $3->temp);
+		printf("!! %d\n",$1->temp);
 	}
 	| expression_2 {
 		$$ = $1;
@@ -1385,7 +1465,9 @@ expression_2:
 				break;
 		}
 		tempStack = intStackPush(tempStack, $1->temp);
+		printf("!! %d\n",$1->temp);
 		tempStack = intStackPush(tempStack, $3->temp);
+		printf("!! %d\n",$1->temp);
 	}
 	| expression_3 {
 		$$ = $1;
@@ -1413,7 +1495,9 @@ expression_3:
 				break;
 		}
 		tempStack = intStackPush(tempStack, $1->temp);
+		printf("!! %d\n",$1->temp);
 		tempStack = intStackPush(tempStack, $3->temp);
+		printf("!! %d\n",$1->temp);
 	}
 	| value {
 		$$ = $1;
@@ -1443,13 +1527,14 @@ number:
 %%
 
 int main (void) {
-	code = (char*)malloc(2001 * sizeof(char));
-	codeSz = 2000;
+	code = (char*)malloc(10001 * sizeof(char));
+	codeSz = 10000;
 	table = (char*)malloc(201 * sizeof(char));
 	tableSz = 201;
 	codeOc = tableOc = 0;
 	tableOc += sprintf(table + tableOc, ".table\n");
 	codeOc += sprintf(code + codeOc, ".code\n");
+	initSegtree();
 	tempStack = labelStack = 0;
 	labelId = ifEndId = 0;
 	scopeStack = intStackPush(scopeStack, 0);

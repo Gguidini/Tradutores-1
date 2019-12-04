@@ -45,11 +45,12 @@ void insert(Symbol *newSymbol){
 	insert_list(newSymbol, id);
 }
 
-void add_symbol(DataType type, char name[], int line, int pos, int function, int scope, int temp){
+void add_symbol(DataType type, char name[], int line, int pos, int function, int scope, int temp, int sz){
 	Symbol *newSymbol = (Symbol*) malloc(sizeof(Symbol));
 	newSymbol->type = type;
 	strcpy(newSymbol->name, name);
 	newSymbol->line = line;
+	newSymbol->sz = sz;
 	newSymbol->pos = pos;
 	newSymbol->function = function;
 	newSymbol->next = 0;

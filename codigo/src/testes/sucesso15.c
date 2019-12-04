@@ -63,3 +63,7 @@ int upd(int st[], int stmin[], int stmax[], int lazy[], int p, int l, int r, int
 	st[p] = st[2*p] + st[2*p+1];
 }
 
+int main(){
+	int st[4000], stmin[4000], stmax[4000], lazy[4000];
+	upd(st, stmin, stmax, lazy, 1, 0, 10, 1 1, 100);
+}
