@@ -12,7 +12,9 @@ DIGIT   [0-9]
 
 ID      [a-zA-Z_][a-z0-9A-Z]*
 
-OP1     ">"|"<"|"=="|"!="|">="|"<="|"&&"|"||"
+OP0     "&&"|"||"
+
+OP1     ">"|"<"|"=="|"!="|">="|"<="
 
 OP2     "+"|"-"|"^"|"|"|"&"
 
@@ -130,6 +132,14 @@ int lines = 0, errors = 0;
     yylval->tok.line = lines;
     yylval->tok.pos = pos;
     return Id;
+}
+
+{OP0} {
+    yylval->tok.op = (char*) malloc(sizeof(char) * (1 + strlen(yytext)));
+    strcpy(yylval->tok.op, yytext);
+    yylval->tok.line = lines;
+    yylval->tok.pos = pos;
+    return Op0;
 }
 
 {OP1} {

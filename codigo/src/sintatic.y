@@ -245,6 +245,7 @@ extern int yylex_destroy();
 %token <tok> ArrayType "arrayType"
 %token <tok> ArrayOp "arrayOp"
 %token <tok> Id "id"
+%token <tok> Op0 "op0"
 %token <tok> Op1 "op1"
 %token <tok> Op2 "op2"
 %token <tok> Op3 "op3"
@@ -281,6 +282,7 @@ extern int yylex_destroy();
 %type <node> variables_declaration
 %type <node> identifiers_list
 %type <node> expression
+%type <node> expression_0
 %type <node> expression_1
 %type <node> expression_2
 %type <node> expression_3
@@ -1167,6 +1169,7 @@ expression:
 						codeOc += sprintf(code + codeOc, "mov $%d, $%d\n", onTable->temp, $3->temp);
 					}
 					else{
+						printf("Nome do vetor %s\n", onTable->name);
 						codeOc += sprintf(code + codeOc, "mov %s, $%d\n", onTable->name, $3->temp);
 					}
 					break;
@@ -1196,6 +1199,7 @@ expression:
 				codeOc += sprintf(code + codeOc, "mov $%d, $%d\n", onTable->temp, $$->temp);
 			}
 			else{
+				printf("Nome do vetor %s\n", onTable->name);
 				codeOc += sprintf(code + codeOc, "mov %s, $%d\n", onTable->name, $$->temp);
 			}
 			tempStack = intStackPush(tempStack, $3->temp);
@@ -1267,20 +1271,48 @@ expression:
 				codeOc += sprintf(code + codeOc, "mov $%d[$%d], $%d\n", ($1->temp >> 11) - 1, $1->temp & ((1 << 11) - 1), $$->temp);
 			}
 			else{
-				codeOc += sprintf(code + codeOc, "mov %d[$%d], $%d\n", tempStack->val, $1->temp, $$->temp);
+				codeOc += sprintf(code + codeOc, "mov $%d[$%d], $%d\n", tempStack->val, $1->temp, $$->temp);
 			}
 			tempStack = intStackPush(tempStack, $3->temp);
 		}
 		$$->type = rulesNames[expression];
 		lastType = $$->dType;
 	}
-	| expression_1 {
+	| expression_0 {
 		$$ = $1;
 		root = $$;
 		if($$->type == 0){
 			$$->type = rulesNames[expression];
 		}
 		lastType = $$->dType;
+	}
+
+expression_0:
+	expression_0 Op0 expression_1 {
+		$$ = new_node();
+		root = $$;
+		$$->line = $1->line;
+		convertChildrenFloat($$, $1, $2, $3);
+		$$->type = (void*)-1;
+		$$->temp = tempStack->val;
+		tempStack = intStackPop(tempStack);
+		printf("Exp0 %s\n", $2.op);
+		switch($2.op[0]){
+			case '|':
+				allocString(&code, &codeSz, codeOc);
+				codeOc += sprintf(code + codeOc, "or $%d, $%d, $%d\n", $$->temp, $1->temp, $3->temp);
+				break;
+			case '&':
+				allocString(&code, &codeSz, codeOc);
+				codeOc += sprintf(code + codeOc, "and $%d, $%d, $%d\n", $$->temp, $1->temp, $3->temp);
+				break;
+		}
+		tempStack = intStackPush(tempStack, $1->temp);
+		tempStack = intStackPush(tempStack, $3->temp);
+	}
+	| expression_1 {
+		$$ = $1;
+		root = $$;
 	}
 
 expression_1:
@@ -1311,14 +1343,6 @@ expression_1:
 				codeOc += sprintf(code + codeOc, "seq $%d, $%d, $%d\n", $$->temp, $1->temp, $3->temp);
 				allocString(&code, &codeSz, codeOc);
 				codeOc += sprintf(code + codeOc, "bxor $%d, $%d, 1\n", $$->temp, $$->temp);
-				break;
-			case '|':
-				allocString(&code, &codeSz, codeOc);
-				codeOc += sprintf(code + codeOc, "or $%d, $%d, $%d\n", $$->temp, $1->temp, $3->temp);
-				break;
-			case '&':
-				allocString(&code, &codeSz, codeOc);
-				codeOc += sprintf(code + codeOc, "and $%d, $%d, $%d\n", $$->temp, $1->temp, $3->temp);
 				break;
 		}
 		tempStack = intStackPush(tempStack, $1->temp);

@@ -1,4 +1,4 @@
-all: sintatic
+all: clean sintatic
 
 sintatic: sintatic.tab.o lex.yy.o tree.o symbol.o misc.o
 	gcc -g -o sintatic lex.yy.o sintatic.tab.o tree.o symbol.o misc.o
@@ -25,4 +25,4 @@ sintatic.tab.c:
 	bison sintatic.y --report=all
 
 clean:
-	rm sintatic.tab.c sintatic.tab.h lex.yy.c *.o sintatic
+	rm -f sintatic.tab.c sintatic.tab.h lex.yy.c *.o sintatic
