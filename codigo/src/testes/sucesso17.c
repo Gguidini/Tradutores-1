@@ -2,7 +2,7 @@ int main(){
 	SumArray<int> s[10];
 	MinArray<int> s1[10];
 	MaxArray<int> s2[10];
-	int i;
+	float i;
 	i = 0;
 	while(i < 10){
 		s1[i, i] += i;
