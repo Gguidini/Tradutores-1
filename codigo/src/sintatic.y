@@ -226,13 +226,12 @@ extern int yylex_destroy();
 		allocString(&code, &codeSz, codeOc);
 		codeOc += sprintf(code + codeOc, "param $%d\n", argTemp->val);
 		tempStack = intStackPush(tempStack, argTemp->val);
-		printf("?????? %d\n", argTemp->val);
 		paramNum++;
 		return 1;
 	}
 
 	void initSegtree(){
-		codeOc += sprintf(code + codeOc, " ___prop: \n  mov $0, #0 \n  mov $1, #1 \n  mov $2, #2 \n  mov $3, #3 \n  mov $4, #4 \n  mov $5, #5 \n  mov $6, #6 \n  mov $7, $4 \n  mov $8, $3[$7] \n  brz ___0, $8 \n  mov $8, $4 \n  mov $9, $4 \n  mov $10, $3[$9] \n  mov $11, $6 \n  mov $12, $5 \n  sub $13, $11, $12 \n  mov $12, 1 \n  add $11, $13, $12 \n  mul $12, $10, $11 \n  mov $11, $0[$8] \n  add $11, $11, $12 \n  mov $0[$8], $11 \n  mov $11, $4 \n  mov $12, $4 \n  mov $10, $3[$12] \n  mov $13, $1[$11] \n  add $13, $13, $10 \n  mov $1[$11], $13 \n  mov $13, $4 \n  mov $10, $4 \n  mov $14, $3[$10] \n  mov $15, $2[$13] \n  add $15, $15, $14 \n  mov $2[$13], $15 \n  mov $15, $5 \n  mov $14, $6 \n  seq $16, $15, $14 \n  bxor $16, $16, 1 \n  brz ___1, $16 \n  mov $16, 2 \n  mov $14, $4 \n  mul $15, $16, $14 \n  mov $14, $4 \n  mov $16, $3[$14] \n  mov $17, $3[$15] \n  add $17, $17, $16 \n  mov $3[$15], $17 \n  mov $17, 2 \n  mov $16, $4 \n  mul $18, $17, $16 \n  mov $16, 1 \n  add $17, $18, $16 \n  mov $16, $4 \n  mov $18, $3[$16] \n  mov $19, $3[$17] \n  add $19, $19, $18 \n  mov $3[$17], $19 \n  ___1: \n  ___end1: \n  mov $19, $4 \n  mov $18, 0 \n  mov $3[$19], $18 \n  ___0: \n  ___end0: \n return 0 \n ___querysum: \n  mov $0, #0 \n  mov $1, #1 \n  mov $2, #2 \n  mov $3, #3 \n  mov $4, #4 \n  mov $5, #5 \n  mov $6, #6 \n  mov $7, #7 \n  mov $8, #8 \n  mov $9, $0 \n  mov $10, $1 \n  mov $11, $2 \n  mov $12, $3 \n  mov $13, $4 \n  mov $14, $5 \n  mov $15, $6 \n  param $9 \n  param $10 \n  param $11 \n  param $12 \n  param $13 \n  param $14 \n  param $15 \n  \n call ___prop, 7 \n pop $15 \n  mov $15, $5 \n  mov $14, $7 \n  sleq $13, $14, $15 \n  mov $14, $6 \n  mov $15, $8 \n  sleq $12, $14, $15 \n  and $15, $13, $12 \n  brz ___2, $15 \n  mov $15, $4 \n  mov $12, $0[$15] \n  return $12 \n  ___2: \n  ___end2: \n  mov $12, $7 \n  mov $13, $6 \n  sleq $14, $12, $13 \n  mov $13, $8 \n  mov $12, $5 \n  sleq $11, $12, $13 \n  and $12, $14, $11 \n  brz ___3, $12 \n  mov $11, $5 \n  mov $14, $6 \n  add $13, $11, $14 \n  mov $14, 2 \n  div $11, $13, $14 \n  mov $12, $11 \n  mov $11, $0 \n  mov $14, $1 \n  mov $13, $2 \n  mov $10, $3 \n  mov $9, 2 \n  mov $16, $4 \n  mul $17, $9, $16 \n  mov $16, $5 \n  mov $9, $12 \n  mov $18, $7 \n  mov $19, $8 \n  param $11 \n  param $14 \n  param $13 \n  param $10 \n  param $17 \n  param $16 \n  param $9 \n  param $18 \n  param $19 \n  \n call ___querysum, 9 \n pop $19 \n  mov $18, $0 \n  mov $9, $1 \n  mov $16, $2 \n  mov $17, $3 \n  mov $10, 2 \n  mov $13, $4 \n  mul $14, $10, $13 \n  mov $13, 1 \n  add $10, $14, $13 \n  mov $13, $12 \n  mov $14, 1 \n  add $11, $13, $14 \n  mov $14, $6 \n  mov $13, $7 \n  mov $20, $8 \n  param $18 \n  param $9 \n  param $16 \n  param $17 \n  param $10 \n  param $11 \n  param $14 \n  param $13 \n  param $20 \n  \n call ___querysum, 9 \n pop $20 \n  add $13, $19, $20 \n  return $13 \n  ___3: \n  ___end3: \n return 0 \n ___querymin: \n  mov $0, #0 \n  mov $1, #1 \n  mov $2, #2 \n  mov $3, #3 \n  mov $4, #4 \n  mov $5, #5 \n  mov $6, #6 \n  mov $7, #7 \n  mov $8, #8 \n  mov $9, $0 \n  mov $10, $1 \n  mov $11, $2 \n  mov $12, $3 \n  mov $13, $4 \n  mov $14, $5 \n  mov $15, $6 \n  param $9 \n  param $10 \n  param $11 \n  param $12 \n  param $13 \n  param $14 \n  param $15 \n  \n call ___prop, 7 \n pop $15 \n  mov $15, $5 \n  mov $14, $7 \n  sleq $13, $14, $15 \n  mov $14, $6 \n  mov $15, $8 \n  sleq $12, $14, $15 \n  and $15, $13, $12 \n  brz ___4, $15 \n  mov $15, $4 \n  mov $12, $0[$15] \n  return $12 \n  ___4: \n  ___end4: \n  mov $12, $7 \n  mov $13, $6 \n  sleq $14, $12, $13 \n  mov $13, $8 \n  mov $12, $5 \n  sleq $11, $12, $13 \n  and $12, $14, $11 \n  brz ___5, $12 \n  mov $11, $5 \n  mov $14, $6 \n  add $13, $11, $14 \n  mov $14, 2 \n  div $11, $13, $14 \n  mov $12, $11 \n  mov $11, $0 \n  mov $14, $1 \n  mov $13, $2 \n  mov $10, $3 \n  mov $9, 2 \n  mov $16, $4 \n  mul $17, $9, $16 \n  mov $16, $5 \n  mov $9, $12 \n  mov $18, $7 \n  mov $19, $8 \n  param $11 \n  param $14 \n  param $13 \n  param $10 \n  param $17 \n  param $16 \n  param $9 \n  param $18 \n  param $19 \n  \n call ___querymin, 9 \n pop $19 \n  mov $18, $0 \n  mov $9, $1 \n  mov $16, $2 \n  mov $17, $3 \n  mov $10, 2 \n  mov $13, $4 \n  mul $14, $10, $13 \n  mov $13, 1 \n  add $10, $14, $13 \n  mov $13, $12 \n  mov $14, 1 \n  add $11, $13, $14 \n  mov $14, $6 \n  mov $13, $7 \n  mov $20, $8 \n  param $18 \n  param $9 \n  param $16 \n  param $17 \n  param $10 \n  param $11 \n  param $14 \n  param $13 \n  param $20 \n  \n call ___querymin, 9 \n pop $20 \n  add $13, $19, $20 \n  return $13 \n  ___5: \n  ___end5: \n return 0 \n ___querymax: \n  mov $0, #0 \n  mov $1, #1 \n  mov $2, #2 \n  mov $3, #3 \n  mov $4, #4 \n  mov $5, #5 \n  mov $6, #6 \n  mov $7, #7 \n  mov $8, #8 \n  mov $9, $0 \n  mov $10, $1 \n  mov $11, $2 \n  mov $12, $3 \n  mov $13, $4 \n  mov $14, $5 \n  mov $15, $6 \n  param $9 \n  param $10 \n  param $11 \n  param $12 \n  param $13 \n  param $14 \n  param $15 \n  \n call ___prop, 7 \n pop $15 \n  mov $15, $5 \n  mov $14, $7 \n  sleq $13, $14, $15 \n  mov $14, $6 \n  mov $15, $8 \n  sleq $12, $14, $15 \n  and $15, $13, $12 \n  brz ___6, $15 \n  mov $15, $4 \n  mov $12, $0[$15] \n  return $12 \n  ___6: \n  ___end6: \n  mov $12, $7 \n  mov $13, $6 \n  sleq $14, $12, $13 \n  mov $13, $8 \n  mov $12, $5 \n  sleq $11, $12, $13 \n  and $12, $14, $11 \n  brz ___7, $12 \n  mov $11, $5 \n  mov $14, $6 \n  add $13, $11, $14 \n  mov $14, 2 \n  div $11, $13, $14 \n  mov $12, $11 \n  mov $11, $0 \n  mov $14, $1 \n  mov $13, $2 \n  mov $10, $3 \n  mov $9, 2 \n  mov $16, $4 \n  mul $17, $9, $16 \n  mov $16, $5 \n  mov $9, $12 \n  mov $18, $7 \n  mov $19, $8 \n  param $11 \n  param $14 \n  param $13 \n  param $10 \n  param $17 \n  param $16 \n  param $9 \n  param $18 \n  param $19 \n  \n call ___querymax, 9 \n pop $19 \n  mov $18, $0 \n  mov $9, $1 \n  mov $16, $2 \n  mov $17, $3 \n  mov $10, 2 \n  mov $13, $4 \n  mul $14, $10, $13 \n  mov $13, 1 \n  add $10, $14, $13 \n  mov $13, $12 \n  mov $14, 1 \n  add $11, $13, $14 \n  mov $14, $6 \n  mov $13, $7 \n  mov $20, $8 \n  param $18 \n  param $9 \n  param $16 \n  param $17 \n  param $10 \n  param $11 \n  param $14 \n  param $13 \n  param $20 \n  \n call ___querymax, 9 \n pop $20 \n  add $13, $19, $20 \n  return $13 \n  ___7: \n  ___end7: \n return 0 \n ___upd: \n  mov $0, #0 \n  mov $1, #1 \n  mov $2, #2 \n  mov $3, #3 \n  mov $4, #4 \n  mov $5, #5 \n  mov $6, #6 \n  mov $7, #7 \n  mov $8, #8 \n  mov $9, #9 \n  mov $10, $0 \n  mov $11, $1 \n  mov $12, $2 \n  mov $13, $3 \n  mov $14, $4 \n  mov $15, $5 \n  mov $16, $6 \n  param $10 \n  param $11 \n  param $12 \n  param $13 \n  param $14 \n  param $15 \n  param $16 \n  \n call ___prop, 7 \n pop $16 \n  mov $16, $7 \n  mov $15, $6 \n  slt $14, $15, $16 \n  mov $15, $8 \n  mov $16, $5 \n  slt $13, $15, $16 \n  or $16, $14, $13 \n  brz ___8, $16 \n  mov $16, 0 \n  return $16 \n  ___8: \n  ___end8: \n  mov $16, $5 \n  mov $13, $7 \n  sleq $14, $13, $16 \n  mov $13, $6 \n  mov $16, $8 \n  sleq $15, $13, $16 \n  and $16, $14, $15 \n  brz ___9, $16 \n  mov $16, $4 \n  mov $15, $9 \n  mov $3[$16], $15 \n  mov $15, $0 \n  mov $13, $1 \n  mov $12, $2 \n  mov $11, $3 \n  mov $10, $4 \n  mov $17, $5 \n  mov $18, $6 \n  param $15 \n  param $13 \n  param $12 \n  param $11 \n  param $10 \n  param $17 \n  param $18 \n  \n call ___prop, 7 \n pop $18 \n  mov $18, $4 \n  mov $17, $0[$18] \n  return $17 \n  ___9: \n  ___end9: \n  mov $10, $5 \n  mov $11, $6 \n  add $12, $10, $11 \n  mov $11, 2 \n  div $10, $12, $11 \n  mov $17, $10 \n  mov $10, $0 \n  mov $11, $1 \n  mov $12, $2 \n  mov $13, $3 \n  mov $15, 2 \n  mov $19, $4 \n  mul $20, $15, $19 \n  mov $19, $5 \n  mov $15, $17 \n  mov $21, $7 \n  mov $22, $8 \n  mov $23, $9 \n  param $10 \n  param $11 \n  param $12 \n  param $13 \n  param $20 \n  param $19 \n  param $15 \n  param $21 \n  param $22 \n  param $23 \n  \n call ___upd, 10 \n pop $23 \n  mov $22, $0 \n  mov $21, $1 \n  mov $15, $2 \n  mov $19, $3 \n  mov $20, 2 \n  mov $13, $4 \n  mul $12, $20, $13 \n  mov $13, 1 \n  add $20, $12, $13 \n  mov $13, $17 \n  mov $12, 1 \n  add $11, $13, $12 \n  mov $12, $6 \n  mov $13, $7 \n  mov $10, $8 \n  mov $24, $9 \n  param $22 \n  param $21 \n  param $15 \n  param $19 \n  param $20 \n  param $11 \n  param $12 \n  param $13 \n  param $10 \n  param $24 \n call ___upd, 10 \n pop $24 \n  add $10, $23, $24 \n  mov $10, $4 \n  mov $24, 2 \n  mov $23, $4 \n  mul $13, $24, $23 \n  mov $23, $0[$13] \n  mov $24, 2 \n  mov $12, $4 \n  mul $11, $24, $12 \n  mov $12, 1 \n  add $24, $11, $12 \n  mov $12, $0[$24] \n  add $11, $23, $12 \n  mov $0[$10], $11 \n return 0 \n \n nop \n");
+		codeOc += sprintf(code + codeOc, "___min: \nmov $0, #0 \nmov $1, #1 \nmov $2, $0 \nmov $3, $1 \nslt $4, $2, $3 \nbrz ___0, $4 \nmov $4, $0 \nreturn $4 \n___0: \n___end0: \nmov $4, $1 \nreturn $4 \nreturn 0 \n___max: \nmov $0, #0 \nmov $1, #1 \nmov $2, $0 \nmov $3, $1 \nslt $4, $3, $2 \nbrz ___1, $4 \nmov $4, $0 \nreturn $4 \n___1: \n___end1: \nmov $4, $1 \nreturn $4 \nreturn 0 \n___prop: \nmov $0, #0 \nmov $1, #1 \nmov $2, #2 \nmov $3, #3 \nmov $4, #4 \nmov $5, #5 \nmov $6, #6 \nmov $7, $4 \nmov $8, $3[$7] \nbrz ___2, $8 \nmov $8, $4 \nmov $9, $4 \nmov $10, $3[$9] \nmov $11, $6 \nmov $12, $5 \nsub $13, $11, $12 \nmov $12, 1 \nadd $11, $13, $12 \nmul $12, $10, $11 \nmov $11, $0[$8] \nadd $11, $11, $12 \nmov $0[$8], $11 \nmov $11, $4 \nmov $12, $4 \nmov $10, $3[$12] \nmov $13, $1[$11] \nadd $13, $13, $10 \nmov $1[$11], $13 \nmov $13, $4 \nmov $10, $4 \nmov $14, $3[$10] \nmov $15, $2[$13] \nadd $15, $15, $14 \nmov $2[$13], $15 \nmov $15, $5 \nmov $14, $6 \nseq $16, $15, $14 \nbxor $16, $16, 1 \nbrz ___3, $16 \nmov $16, 2 \nmov $14, $4 \nmul $15, $16, $14 \nmov $14, $4 \nmov $16, $3[$14] \nmov $17, $3[$15] \nadd $17, $17, $16 \nmov $3[$15], $17 \nmov $17, 2 \nmov $16, $4 \nmul $18, $17, $16 \nmov $16, 1 \nadd $17, $18, $16 \nmov $16, $4 \nmov $18, $3[$16] \nmov $19, $3[$17] \nadd $19, $19, $18 \nmov $3[$17], $19 \n___3: \n___end3: \nmov $19, $4 \nmov $18, 0 \nmov $3[$19], $18 \n___2: \n___end2: \nreturn 0 \n___querysum: \nmov $0, #0 \nmov $1, #1 \nmov $2, #2 \nmov $3, #3 \nmov $4, #4 \nmov $5, #5 \nmov $6, #6 \nmov $7, #7 \nmov $8, #8 \nmov $9, $0 \nmov $10, $1 \nmov $11, $2 \nmov $12, $3 \nmov $13, $4 \nmov $14, $5 \nmov $15, $6 \nparam $9 \nparam $10 \nparam $11 \nparam $12 \nparam $13 \nparam $14 \nparam $15 \ncall ___prop, 7 \npop $15 \nmov $15, $5 \nmov $14, $7 \nsleq $13, $14, $15 \nmov $14, $6 \nmov $15, $8 \nsleq $12, $14, $15 \nand $15, $13, $12 \nbrz ___4, $15 \nmov $15, $4 \nmov $12, $0[$15] \nreturn $12 \n___4: \n___end4: \nmov $12, $7 \nmov $13, $6 \nsleq $14, $12, $13 \nmov $13, $8 \nmov $12, $5 \nsleq $11, $12, $13 \nand $12, $14, $11 \nbrz ___5, $12 \nmov $11, $5 \nmov $14, $6 \nadd $13, $11, $14 \nmov $14, 2 \ndiv $11, $13, $14 \nmov $12, $11 \nmov $11, $0 \nmov $14, $1 \nmov $13, $2 \nmov $10, $3 \nmov $9, 2 \nmov $16, $4 \nmul $17, $9, $16 \nmov $16, $5 \nmov $9, $12 \nmov $18, $7 \nmov $19, $8 \nparam $11 \nparam $14 \nparam $13 \nparam $10 \nparam $17 \nparam $16 \nparam $9 \nparam $18 \nparam $19 \ncall ___querysum, 9 \npop $19 \nmov $18, $0 \nmov $9, $1 \nmov $16, $2 \nmov $17, $3 \nmov $10, 2 \nmov $13, $4 \nmul $14, $10, $13 \nmov $13, 1 \nadd $10, $14, $13 \nmov $13, $12 \nmov $14, 1 \nadd $11, $13, $14 \nmov $14, $6 \nmov $13, $7 \nmov $20, $8 \nparam $18 \nparam $9 \nparam $16 \nparam $17 \nparam $10 \nparam $11 \nparam $14 \nparam $13 \nparam $20 \ncall ___querysum, 9 \npop $20 \nadd $13, $19, $20 \nreturn $13 \n___5: \n___end5: \nreturn 0 \n___querymin: \nmov $0, #0 \nmov $1, #1 \nmov $2, #2 \nmov $3, #3 \nmov $4, #4 \nmov $5, #5 \nmov $6, #6 \nmov $7, #7 \nmov $8, #8 \nmov $9, $0 \nmov $10, $1 \nmov $11, $2 \nmov $12, $3 \nmov $13, $4 \nmov $14, $5 \nmov $15, $6 \nparam $9 \nparam $10 \nparam $11 \nparam $12 \nparam $13 \nparam $14 \nparam $15 \ncall ___prop, 7 \npop $15 \nmov $15, $5 \nmov $14, $7 \nsleq $13, $14, $15 \nmov $14, $6 \nmov $15, $8 \nsleq $12, $14, $15 \nand $15, $13, $12 \nbrz ___6, $15 \nmov $15, $4 \nmov $12, $1[$15] \nreturn $12 \n___6: \n___end6: \nmov $12, $7 \nmov $13, $6 \nsleq $14, $12, $13 \nmov $13, $8 \nmov $12, $5 \nsleq $11, $12, $13 \nand $12, $14, $11 \nbrz ___7, $12 \nmov $11, $5 \nmov $14, $6 \nadd $13, $11, $14 \nmov $14, 2 \ndiv $11, $13, $14 \nmov $12, $11 \nmov $11, $0 \nmov $14, $1 \nmov $13, $2 \nmov $10, $3 \nmov $9, 2 \nmov $16, $4 \nmul $17, $9, $16 \nmov $16, $5 \nmov $9, $12 \nmov $18, $7 \nmov $19, $8 \nparam $11 \nparam $14 \nparam $13 \nparam $10 \nparam $17 \nparam $16 \nparam $9 \nparam $18 \nparam $19 \ncall ___querymin, 9 \npop $19 \nmov $18, $0 \nmov $9, $1 \nmov $16, $2 \nmov $17, $3 \nmov $10, 2 \nmov $13, $4 \nmul $14, $10, $13 \nmov $13, 1 \nadd $10, $14, $13 \nmov $13, $12 \nmov $14, 1 \nadd $11, $13, $14 \nmov $14, $6 \nmov $13, $7 \nmov $20, $8 \nparam $18 \nparam $9 \nparam $16 \nparam $17 \nparam $10 \nparam $11 \nparam $14 \nparam $13 \nparam $20 \ncall ___querymin, 9 \npop $20 \nparam $19 \nparam $20 \ncall ___min, 2 \npop $20 \nreturn $20 \n___7: \n___end7: \nmov $20, 2147483647 \nreturn $20 \nreturn 0 \n___querymax: \nmov $0, #0 \nmov $1, #1 \nmov $2, #2 \nmov $3, #3 \nmov $4, #4 \nmov $5, #5 \nmov $6, #6 \nmov $7, #7 \nmov $8, #8 \nmov $9, $0 \nmov $10, $1 \nmov $11, $2 \nmov $12, $3 \nmov $13, $4 \nmov $14, $5 \nmov $15, $6 \nparam $9 \nparam $10 \nparam $11 \nparam $12 \nparam $13 \nparam $14 \nparam $15 \ncall ___prop, 7 \npop $15 \nmov $15, $5 \nmov $14, $7 \nsleq $13, $14, $15 \nmov $14, $6 \nmov $15, $8 \nsleq $12, $14, $15 \nand $15, $13, $12 \nbrz ___8, $15 \nmov $15, $4 \nmov $12, $2[$15] \nreturn $12 \n___8: \n___end8: \nmov $12, $7 \nmov $13, $6 \nsleq $14, $12, $13 \nmov $13, $8 \nmov $12, $5 \nsleq $11, $12, $13 \nand $12, $14, $11 \nbrz ___9, $12 \nmov $11, $5 \nmov $14, $6 \nadd $13, $11, $14 \nmov $14, 2 \ndiv $11, $13, $14 \nmov $12, $11 \nmov $11, $0 \nmov $14, $1 \nmov $13, $2 \nmov $10, $3 \nmov $9, 2 \nmov $16, $4 \nmul $17, $9, $16 \nmov $16, $5 \nmov $9, $12 \nmov $18, $7 \nmov $19, $8 \nparam $11 \nparam $14 \nparam $13 \nparam $10 \nparam $17 \nparam $16 \nparam $9 \nparam $18 \nparam $19 \ncall ___querymax, 9 \npop $19 \nmov $18, $0 \nmov $9, $1 \nmov $16, $2 \nmov $17, $3 \nmov $10, 2 \nmov $13, $4 \nmul $14, $10, $13 \nmov $13, 1 \nadd $10, $14, $13 \nmov $13, $12 \nmov $14, 1 \nadd $11, $13, $14 \nmov $14, $6 \nmov $13, $7 \nmov $20, $8 \nparam $18 \nparam $9 \nparam $16 \nparam $17 \nparam $10 \nparam $11 \nparam $14 \nparam $13 \nparam $20 \ncall ___querymax, 9 \npop $20 \nparam $19 \nparam $20 \ncall ___max, 2 \npop $20 \nreturn $20 \n___9: \n___end9: \nmov $20, 0 \nmov $19, 2147483648 \nsub $13, $20, $19 \nreturn $13 \nreturn 0 \n___upd: \nmov $0, #0 \nmov $1, #1 \nmov $2, #2 \nmov $3, #3 \nmov $4, #4 \nmov $5, #5 \nmov $6, #6 \nmov $7, #7 \nmov $8, #8 \nmov $9, #9 \nmov $10, $0 \nmov $11, $1 \nmov $12, $2 \nmov $13, $3 \nmov $14, $4 \nmov $15, $5 \nmov $16, $6 \nparam $10 \nparam $11 \nparam $12 \nparam $13 \nparam $14 \nparam $15 \nparam $16 \ncall ___prop, 7 \npop $16 \nmov $16, $7 \nmov $15, $6 \nslt $14, $15, $16 \nmov $15, $8 \nmov $16, $5 \nslt $13, $15, $16 \nor $16, $14, $13 \nbrz ___10, $16 \nmov $16, 0 \nreturn $16 \n___10: \n___end10: \nmov $16, $5 \nmov $13, $7 \nsleq $14, $13, $16 \nmov $13, $6 \nmov $16, $8 \nsleq $15, $13, $16 \nand $16, $14, $15 \nbrz ___11, $16 \nmov $16, $4 \nmov $15, $9 \nmov $3[$16], $15 \nmov $15, $0 \nmov $13, $1 \nmov $12, $2 \nmov $11, $3 \nmov $10, $4 \nmov $17, $5 \nmov $18, $6 \nparam $15 \nparam $13 \nparam $12 \nparam $11 \nparam $10 \nparam $17 \nparam $18 \ncall ___prop, 7 \npop $18 \nmov $18, 1 \nreturn $18 \n___11: \n___end11: \nmov $17, $5 \nmov $10, $6 \nadd $11, $17, $10 \nmov $10, 2 \ndiv $17, $11, $10 \nmov $18, $17 \nmov $17, $0 \nmov $10, $1 \nmov $11, $2 \nmov $12, $3 \nmov $13, 2 \nmov $15, $4 \nmul $19, $13, $15 \nmov $15, $5 \nmov $13, $18 \nmov $20, $7 \nmov $21, $8 \nmov $22, $9 \nparam $17 \nparam $10 \nparam $11 \nparam $12 \nparam $19 \nparam $15 \nparam $13 \nparam $20 \nparam $21 \nparam $22 \ncall ___upd, 10 \npop $22 \nmov $22, $0 \nmov $21, $1 \nmov $20, $2 \nmov $13, $3 \nmov $15, 2 \nmov $19, $4 \nmul $12, $15, $19 \nmov $19, 1 \nadd $15, $12, $19 \nmov $19, $18 \nmov $12, 1 \nadd $11, $19, $12 \nmov $12, $6 \nmov $19, $7 \nmov $10, $8 \nmov $17, $9 \nparam $22 \nparam $21 \nparam $20 \nparam $13 \nparam $15 \nparam $11 \nparam $12 \nparam $19 \nparam $10 \nparam $17 \ncall ___upd, 10 \npop $17 \nmov $17, $4 \nmov $10, 2 \nmov $19, $4 \nmul $12, $10, $19 \nmov $19, $0[$12] \nmov $10, 2 \nmov $11, $4 \nmul $15, $10, $11 \nmov $11, 1 \nadd $10, $15, $11 \nmov $11, $0[$10] \nadd $15, $19, $11 \nmov $0[$17], $15 \nmov $15, $4 \nmov $19, 2 \nmov $13, $4 \nmul $20, $19, $13 \nmov $13, $2[$20] \nmov $19, 2 \nmov $21, $4 \nmul $22, $19, $21 \nmov $21, 1 \nadd $19, $22, $21 \nmov $21, $2[$19] \nparam $13 \nparam $21 \ncall ___max, 2 \npop $21 \nmov $2[$15], $21 \nmov $21, $4 \nmov $22, 2 \nmov $23, $4 \nmul $24, $22, $23 \nmov $23, $1[$24] \nmov $22, 2 \nmov $25, $4 \nmul $26, $22, $25 \nmov $25, 1 \nadd $22, $26, $25 \nmov $25, $1[$22] \nparam $23 \nparam $25 \ncall ___min, 2 \npop $25 \nmov $1[$21], $25 \nreturn 0\n");
 	}
 
 	void zera(int ant, int sz){
@@ -370,7 +369,6 @@ function_definition:
 		popAllIntStack(&tempStack);
 		for(int i = 1023; i >= 0; i--){
 			tempStack = intStackPush(tempStack, i);
-			printf("WE@@E@E@E@ %d\n", i);
 		}
 	} parameters function_body {
 		$$ = new_node();
@@ -599,7 +597,6 @@ statment:
 		root = $$;
 		myfree((void**)&$2.op);
 		tempStack = intStackPush(tempStack, $1->temp);
-		printf("A nao %d\n", $1->temp);
 	}
 	| read {
 		$$ = $1;
@@ -932,7 +929,6 @@ value:
 		$$ = $1;
 		root = $$;
 		$$->dType = $1->dType;
-		printf("QQQQQQQ %d\n", tempStack->val);
 		$$->temp = tempStack->val;
 		tempStack = intStackPop(tempStack);
 		allocString(&code, &codeSz, codeOc);
@@ -1221,6 +1217,7 @@ expression:
 					add_child($$, newNode);
 					add_child(newNode, $3);
 					$$->dType = onTable->type;
+					codeOc += sprintf(code + codeOc, "%s $%d, $%d\n", toBasicType(onTable->type) == dInt ? "fltoint" : "inttofl", $3->temp, $3->temp);
 				}
 			}
 			else{
@@ -1277,33 +1274,27 @@ expression:
 		$$->line = $1->line;
 		add_child($$, $1);
 		add_tchild($$, $2.op, $2.line);
+		if(toBasicType($1->dType) != toBasicType($3->dType)){
+			Node *newNode = new_node();
+			newNode->type = rulesNames[toBasicType($1->dType) == dInt ? to_int : to_float];
+			add_child($$, newNode);
+			add_child(newNode, $3);
+			$$->dType = toBasicType($1->dType);
+			codeOc += sprintf(code + codeOc, "%s $%d, $%d\n", toBasicType($1->dType) == dInt ? "fltoint" : "inttofl", $3->temp, $3->temp);
+		}
+		else{
+			add_child($$, $3);
+		}
 		if($1->dType > dFloatArray){
 			allocString(&code, &codeSz, codeOc);
 			codeOc += sprintf(code + codeOc, "param $%d\n", $3->temp);
 			codeOc += sprintf(code + codeOc, "call ___upd, 10\n");
-			printf("sss %d\n", tempStack->val);
 			$$->temp = $3->temp;
 		}
 		else{
 			$$->temp = tempStack->val;
 			tempStack = intStackPop(tempStack);
 
-			if($1->dType != $3->dType){
-				if(toBasicType($1->dType) != $1->dType || toBasicType($3->dType) != $3->dType){
-					sprintf(wError + strlen(wError),"Error line %d: no conversion from %s to %s exists\n", $1->line, dTypeName[$3->dType], dTypeName[$1->dType]);
-					add_child($$, $3);
-				}
-				else{
-					Node *newNode = new_node();
-					newNode->type = rulesNames[toBasicType($1->dType) == dInt ? to_int : to_float];
-					add_child($$, newNode);
-					add_child(newNode, $3);
-					$$->dType = toBasicType($1->dType);
-				}
-			}
-			else{
-				add_child($$, $3);
-			}
 
 			switch($2.op[0]){
 				case '=':
@@ -1347,10 +1338,8 @@ expression:
 					codeOc += sprintf(code + codeOc, "mov $%d[$%d], $%d\n", tempStack->val, $1->temp, $$->temp);
 				}
 				tempStack = intStackPush(tempStack, $3->temp);
-				printf("!! %d\n",$1->temp);
 			}
 		}
-		printf("aaa %d\n", tempStack->val);
 		$$->type = rulesNames[expression];
 		lastType = $$->dType;
 	}
@@ -1372,7 +1361,6 @@ expression_0:
 		$$->type = (void*)-1;
 		$$->temp = tempStack->val;
 		tempStack = intStackPop(tempStack);
-		printf("Exp0 %s\n", $2.op);
 		switch($2.op[0]){
 			case '|':
 				allocString(&code, &codeSz, codeOc);
@@ -1384,9 +1372,7 @@ expression_0:
 				break;
 		}
 		tempStack = intStackPush(tempStack, $1->temp);
-		printf("!! %d\n",$1->temp);
 		tempStack = intStackPush(tempStack, $3->temp);
-		printf("!! %d\n",$1->temp);
 	}
 	| expression_1 {
 		$$ = $1;
@@ -1423,10 +1409,9 @@ expression_1:
 				codeOc += sprintf(code + codeOc, "bxor $%d, $%d, 1\n", $$->temp, $$->temp);
 				break;
 		}
+		$$->dType = $1->dType > $3->dType ? $1->dType : $3->dType;
 		tempStack = intStackPush(tempStack, $1->temp);
-		printf("!! %d\n",$1->temp);
 		tempStack = intStackPush(tempStack, $3->temp);
-		printf("!! %d\n",$1->temp);
 	}
 	| expression_2 {
 		$$ = $1;
@@ -1464,10 +1449,9 @@ expression_2:
 				codeOc += sprintf(code + codeOc, "band $%d, $%d, $%d\n", $$->temp, $1->temp, $3->temp);
 				break;
 		}
+		$$->dType = $1->dType > $3->dType ? $1->dType : $3->dType;
 		tempStack = intStackPush(tempStack, $1->temp);
-		printf("!! %d\n",$1->temp);
 		tempStack = intStackPush(tempStack, $3->temp);
-		printf("!! %d\n",$1->temp);
 	}
 	| expression_3 {
 		$$ = $1;
@@ -1495,9 +1479,7 @@ expression_3:
 				break;
 		}
 		tempStack = intStackPush(tempStack, $1->temp);
-		printf("!! %d\n",$1->temp);
 		tempStack = intStackPush(tempStack, $3->temp);
-		printf("!! %d\n",$1->temp);
 	}
 	| value {
 		$$ = $1;
